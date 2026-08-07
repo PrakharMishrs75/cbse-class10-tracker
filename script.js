@@ -1,3 +1,21 @@
+(async function(){
+  const authScreen=document.getElementById("authScreen");
+  const appShell=document.getElementById("appShell");
+  try {
+    await window.clerkReady;
+  } catch (error) {
+    authScreen.innerHTML = '<div class="auth-card"><h1>Unable to load sign in</h1><p>Please check your internet connection and refresh the page.</p></div>';
+    return;
+  }
+  if (!window.Clerk.isSignedIn) {
+    appShell.style.display = "none";
+    window.Clerk.mountSignIn(document.getElementById("clerkAuth"));
+    window.Clerk.addListener(() => { if (window.Clerk.isSignedIn) location.reload(); });
+    return;
+  }
+  authScreen.style.display = "none";
+  appShell.style.display = "grid";
+
 const syllabus={
 "Mathematics":["Real Numbers","Polynomials","Pair of Linear Equations","Quadratic Equations","Arithmetic Progressions","Triangles","Coordinate Geometry","Introduction to Trigonometry","Applications of Trigonometry","Circles","Areas Related to Circles","Surface Areas and Volumes","Statistics","Probability"],
 "Science":["Chemical Reactions and Equations","Acids, Bases and Salts","Metals and Non-metals","Carbon and Its Compounds","Life Processes","Control and Coordination","How do Organisms Reproduce?","Heredity","Light – Reflection and Refraction","Human Eye and Colourful World","Electricity","Magnetic Effects of Electric Current","Our Environment"],
@@ -6,7 +24,11 @@ const syllabus={
 "Hindi":["क्षितिज","कृतिका","व्याकरण","लेखन कौशल"]
 };
 let s=JSON.parse(localStorage.getItem("cbsePro")||'{"done":{},"marks":[],"revision":{},"events":{},"streak":0}');
-let profile=JSON.parse(localStorage.getItem("cbseStudentProfile")||"null");
+let profile=(function(){
+ const u=window.Clerk.user;
+ const meta=u?.unsafeMetadata||{};
+ return (u?.fullName||u?.firstName||meta.name)?{name:u.fullName||u.firstName||meta.name,class:String(meta.class||"10")} : null;
+})();
 const $=x=>document.querySelector(x), $$=x=>document.querySelectorAll(x);
 const key=(sub,i)=>sub+"::"+i;
 function total(){return Object.values(syllabus).reduce((n,a)=>n+a.length,0)}
@@ -38,12 +60,19 @@ function closeProfile(){
  const modal=$("#profileModal");
  modal.classList.remove("show"); modal.setAttribute("aria-hidden","true");
 }
-function saveProfile(){
+async function saveProfile(){
  const name=$("#studentName").value.trim();
  if(!name){$("#profileError").textContent="Please enter your name.";return;}
  profile={name,class:$("#studentClass").value};
- localStorage.setItem("cbseStudentProfile",JSON.stringify(profile));
- updateProfileUI(); closeProfile();
+ $("#profileError").textContent="Saving…";
+ try{
+   await window.Clerk.user.update({firstName:name});
+   await window.Clerk.user.updateMetadata({unsafeMetadata:{class:profile.class,name:profile.name}});
+   profile={name:window.Clerk.user.fullName||name,class:profile.class};
+   updateProfileUI(); closeProfile();
+ }catch(e){
+   $("#profileError").textContent="Could not save profile. Please try again.";
+ }
 }
 function render(){
  const d=done(),t=total(),p=Math.round(d/t*100),marks=s.marks;
@@ -75,7 +104,7 @@ function renderCalendar(){
  for(let d=1;d<=days;d++){let date=new Date(y,m,d),id=date.toISOString().slice(0,10),today=new Date().toISOString().slice(0,10);out+=`<div class="day ${id===today?'today':''} ${s.events[id]?'has':''}" data-date="${id}"><b>${d}</b>${s.events[id]?"<div class='dot'></div>":""}</div>`}
  $("#days").innerHTML=out;$$("[data-date]").forEach(el=>el.onclick=()=>{let id=el.dataset.date;let task=prompt("Study task for "+id+":",s.events[id]||"");if(task===null)return;if(task.trim())s.events[id]=task;else delete s.events[id];save()})
 }
-function page(name){$$(".page").forEach(p=>p.classList.remove("active"));$("#"+name).classList.add("active");$$(".nav").forEach(n=>n.classList.toggle("active",n.dataset.page===name));$("#crumb").textContent=name.toUpperCase();$("#title").textContent=name==="dashboard"?"Good evening, scholar 👋":name==="subjects"?"Your syllabus":name==="marks"?"Marks tracker":name==="revision"?"Revision center":name==="questions"?"Competency Question Bank":"Study calendar"}
+function page(name){$$(".page").forEach(p=>p.classList.remove("active"));$("#"+name).classList.add("active");$$(".nav").forEach(n=>n.classList.toggle("active",n.dataset.page===name));$("#crumb").textContent=name.toUpperCase();$("#title").textContent=name==="dashboard"?`Good evening, ${profile?.name||"scholar"} 👋`:name==="subjects"?"Your syllabus":name==="marks"?"Marks tracker":name==="revision"?"Revision center":name==="questions"?"Competency Question Bank":"Study calendar"}
 $$("[data-page]").forEach(b=>b.onclick=()=>page(b.dataset.page));$("#search").oninput=renderSyllabus;
 $("#addMark").onclick=()=>{let subject=$("#mSubject").value.trim(),test=$("#mTest").value.trim(),score=+$("#mScore").value,total=+$("#mTotal").value;if(!subject||!test||!total||score<0||score>total){alert("Please enter valid subject, test, score and total marks.");return}s.marks.push({subject,test,score,total});["mSubject","mTest","mScore","mTotal"].forEach(id=>$("#"+id).value="");save()};
 $("#prev").onclick=()=>{cur.setMonth(cur.getMonth()-1);renderCalendar()};$("#next").onclick=()=>{cur.setMonth(cur.getMonth()+1);renderCalendar()};
@@ -84,6 +113,7 @@ updateProfileUI();
 $("#saveProfile").onclick=saveProfile;
 $("#profileBtn").onclick=()=>openProfile();
 $("#profileModal").addEventListener("click",e=>{if(e.target.id==="profileModal" && profile)closeProfile()});
+$("#signOutBtn").onclick=async()=>{await window.Clerk.signOut();location.reload()};
 if(!profile)openProfile(true);
 render();
 // Competency-based question bank + optional GitHub JSON sync
@@ -148,3 +178,5 @@ async function syncGithub(){
   }catch(e){status.textContent=`Sync failed: ${e.message}. Check that the URL is a public raw JSON file.`}
 }
 setupQuestionBank();
+
+})();
