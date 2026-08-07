@@ -6,12 +6,45 @@ const syllabus={
 "Hindi":["क्षितिज","कृतिका","व्याकरण","लेखन कौशल"]
 };
 let s=JSON.parse(localStorage.getItem("cbsePro")||'{"done":{},"marks":[],"revision":{},"events":{},"streak":0}');
+let profile=JSON.parse(localStorage.getItem("cbseStudentProfile")||"null");
 const $=x=>document.querySelector(x), $$=x=>document.querySelectorAll(x);
 const key=(sub,i)=>sub+"::"+i;
 function total(){return Object.values(syllabus).reduce((n,a)=>n+a.length,0)}
 function done(){return Object.entries(syllabus).reduce((n,[sub,a])=>n+a.filter((_,i)=>s.done[key(sub,i)]).length,0)}
 function save(){localStorage.setItem("cbsePro",JSON.stringify(s));render()}
 function pct(sub){return Math.round(syllabus[sub].filter((_,i)=>s.done[key(sub,i)]).length/syllabus[sub].length*100)}
+function initials(name){
+ const parts=String(name||"Student").trim().split(/\s+/).filter(Boolean);
+ return (parts.length>1?parts[0][0]+parts[parts.length-1][0]:parts[0][0]).toUpperCase().slice(0,2);
+}
+function updateProfileUI(){
+ const name=profile?.name||"Student";
+ const cls=profile?.class||"10";
+ $("#profileBtn").textContent=initials(name);
+ $("#title").textContent=`Good evening, ${name} 👋`;
+ $(".brand small").textContent=`Class ${cls} • 2026–27`;
+ $("#profileBtn").title=`${name} • Class ${cls}`;
+}
+function openProfile(force=false){
+ const modal=$("#profileModal");
+ if(!modal)return;
+ $("#studentName").value=profile?.name||"";
+ $("#studentClass").value=profile?.class||"10";
+ $("#profileError").textContent="";
+ modal.classList.add("show"); modal.setAttribute("aria-hidden","false");
+ setTimeout(()=>$("#studentName").focus(),50);
+}
+function closeProfile(){
+ const modal=$("#profileModal");
+ modal.classList.remove("show"); modal.setAttribute("aria-hidden","true");
+}
+function saveProfile(){
+ const name=$("#studentName").value.trim();
+ if(!name){$("#profileError").textContent="Please enter your name.";return;}
+ profile={name,class:$("#studentClass").value};
+ localStorage.setItem("cbseStudentProfile",JSON.stringify(profile));
+ updateProfileUI(); closeProfile();
+}
 function render(){
  const d=done(),t=total(),p=Math.round(d/t*100),marks=s.marks;
  $("#done").textContent=d;$("#left").textContent=t-d;$("#streak").textContent=s.streak||0;$("#sideStreak").textContent=(s.streak||0)+" days";$("#overall").textContent=p+"%";$("#avg").textContent=(marks.length?Math.round(marks.reduce((a,m)=>a+m.score/m.total*100,0)/marks.length):0)+"%";$(".circle").style.setProperty("--p",p+"%");
@@ -46,7 +79,13 @@ function page(name){$$(".page").forEach(p=>p.classList.remove("active"));$("#"+n
 $$("[data-page]").forEach(b=>b.onclick=()=>page(b.dataset.page));$("#search").oninput=renderSyllabus;
 $("#addMark").onclick=()=>{let subject=$("#mSubject").value.trim(),test=$("#mTest").value.trim(),score=+$("#mScore").value,total=+$("#mTotal").value;if(!subject||!test||!total||score<0||score>total){alert("Please enter valid subject, test, score and total marks.");return}s.marks.push({subject,test,score,total});["mSubject","mTest","mScore","mTotal"].forEach(id=>$("#"+id).value="");save()};
 $("#prev").onclick=()=>{cur.setMonth(cur.getMonth()-1);renderCalendar()};$("#next").onclick=()=>{cur.setMonth(cur.getMonth()+1);renderCalendar()};
-$("#theme").onclick=()=>{document.body.classList.toggle("dark");localStorage.setItem("cbseDark",document.body.classList.contains("dark"))};if(localStorage.getItem("cbseDark")==="true")document.body.classList.add("dark");render();
+$("#theme").onclick=()=>{document.body.classList.toggle("dark");localStorage.setItem("cbseDark",document.body.classList.contains("dark"))};if(localStorage.getItem("cbseDark")==="true")document.body.classList.add("dark");
+updateProfileUI();
+$("#saveProfile").onclick=saveProfile;
+$("#profileBtn").onclick=()=>openProfile();
+$("#profileModal").addEventListener("click",e=>{if(e.target.id==="profileModal" && profile)closeProfile()});
+if(!profile)openProfile(true);
+render();
 // Competency-based question bank + optional GitHub JSON sync
 let questionBank = Array.isArray(window.CBSE_QUESTION_BANK) ? window.CBSE_QUESTION_BANK : [];
 let filteredQuestions = [];
