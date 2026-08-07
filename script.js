@@ -8,7 +8,18 @@ window.startDashboard = async function(){
   }
   if (!clerk.isSignedIn) {
     appShell.style.display = "none";
-    clerk.mountSignIn(document.getElementById("clerkAuth"));
+    const appUrl = new URL("/cbse-class10-tracker/", window.location.origin).toString();
+    clerk.mountSignIn(document.getElementById("clerkAuth"), {
+      // GitHub Pages is hosted under /cbse-class10-tracker/, not /.
+      // Use the actual current site URL so Clerk never redirects to the
+      // repository root and produces a GitHub Pages 404.
+      forceRedirectUrl: appUrl,
+      fallbackRedirectUrl: appUrl,
+      signUpForceRedirectUrl: appUrl,
+      signUpFallbackRedirectUrl: appUrl,
+      signUpUrl: appUrl,
+      routing: "hash"
+    });
     clerk.addListener(() => { if (clerk.isSignedIn) location.reload(); });
     return;
   }

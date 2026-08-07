@@ -1,0 +1,6 @@
+GitHub Pages redirect fix
+
+The Clerk sign-in/sign-up components are configured to return to:
+https://prakharmishrs75.github.io/cbse-class10-tracker/
+
+Upload/replace script.js in the repository and commit the change.
