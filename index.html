@@ -48,13 +48,35 @@
   </div>
 </div>
 
-<!-- ClerkJS: static GitHub Pages setup, no Vite build required -->
-<script defer crossorigin="anonymous" src="https://living-doberman-5.clerk.accounts.dev/npm/@clerk/ui@1/dist/ui.browser.js" type="text/javascript"></script>
-<script defer crossorigin="anonymous" data-clerk-publishable-key="pk_test_bGl2aW5nLWRvYmVybWFuLTUuY2xlcmsuYWNjb3VudHMuZGV2JA" src="https://living-doberman-5.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js" type="text/javascript"></script>
+<!-- ClerkJS CDN setup. These tags follow Clerk's documented script-tag flow. -->
+<script
+  defer
+  crossorigin="anonymous"
+  src="https://living-doberman-5.clerk.accounts.dev/npm/@clerk/ui@1/dist/ui.browser.js"
+  type="text/javascript"
+></script>
+<script
+  defer
+  crossorigin="anonymous"
+  data-clerk-publishable-key="pk_test_bGl2aW5nLWRvYmVybWFuLTUuY2xlcmsuYWNjb3VudHMuZGV2JA"
+  src="https://living-doberman-5.clerk.accounts.dev/npm/@clerk/clerk-js@6/dist/clerk.browser.js"
+  type="text/javascript"
+></script>
+<script src="question-bank.js"></script>
 <script>
-window.clerkReady = (async function(){
-  await Clerk.load({ ui: { ClerkUI: window.__internal_ClerkUICtor } });
-  return Clerk;
-})();
+window.addEventListener('load', async function () {
+  const authScreen = document.getElementById('authScreen');
+  try {
+    await Clerk.load({
+      ui: { ClerkUI: window.__internal_ClerkUICtor },
+    });
+    window.Clerk = Clerk;
+    await window.startDashboard();
+  } catch (error) {
+    console.error('Clerk initialization failed:', error);
+    authScreen.innerHTML = '<div class="auth-card"><h1>Unable to load sign in</h1><p>Clerk could not be initialized. Please refresh the page.</p></div>';
+  }
+});
 </script>
-<script src="question-bank.js"></script><script src="script.js"></script></body></html>
+<script src="script.js"></script>
+</body></html>

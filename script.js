@@ -1,16 +1,15 @@
-(async function(){
+window.startDashboard = async function(){
   const authScreen=document.getElementById("authScreen");
   const appShell=document.getElementById("appShell");
-  try {
-    await window.clerkReady;
-  } catch (error) {
-    authScreen.innerHTML = '<div class="auth-card"><h1>Unable to load sign in</h1><p>Please check your internet connection and refresh the page.</p></div>';
+  const clerk=window.Clerk;
+  if (!clerk) {
+    authScreen.innerHTML = '<div class="auth-card"><h1>Unable to load sign in</h1><p>Clerk could not be initialized. Please refresh the page.</p></div>';
     return;
   }
-  if (!window.Clerk.isSignedIn) {
+  if (!clerk.isSignedIn) {
     appShell.style.display = "none";
-    window.Clerk.mountSignIn(document.getElementById("clerkAuth"));
-    window.Clerk.addListener(() => { if (window.Clerk.isSignedIn) location.reload(); });
+    clerk.mountSignIn(document.getElementById("clerkAuth"));
+    clerk.addListener(() => { if (clerk.isSignedIn) location.reload(); });
     return;
   }
   authScreen.style.display = "none";
@@ -25,7 +24,7 @@ const syllabus={
 };
 let s=JSON.parse(localStorage.getItem("cbsePro")||'{"done":{},"marks":[],"revision":{},"events":{},"streak":0}');
 let profile=(function(){
- const u=window.Clerk.user;
+ const u=clerk.user;
  const meta=u?.unsafeMetadata||{};
  return (u?.fullName||u?.firstName||meta.name)?{name:u.fullName||u.firstName||meta.name,class:String(meta.class||"10")} : null;
 })();
@@ -66,9 +65,9 @@ async function saveProfile(){
  profile={name,class:$("#studentClass").value};
  $("#profileError").textContent="Saving…";
  try{
-   await window.Clerk.user.update({firstName:name});
-   await window.Clerk.user.updateMetadata({unsafeMetadata:{class:profile.class,name:profile.name}});
-   profile={name:window.Clerk.user.fullName||name,class:profile.class};
+   await clerk.user.update({firstName:name});
+   await clerk.user.updateMetadata({unsafeMetadata:{class:profile.class,name:profile.name}});
+   profile={name:clerk.user.fullName||name,class:profile.class};
    updateProfileUI(); closeProfile();
  }catch(e){
    $("#profileError").textContent="Could not save profile. Please try again.";
@@ -113,7 +112,7 @@ updateProfileUI();
 $("#saveProfile").onclick=saveProfile;
 $("#profileBtn").onclick=()=>openProfile();
 $("#profileModal").addEventListener("click",e=>{if(e.target.id==="profileModal" && profile)closeProfile()});
-$("#signOutBtn").onclick=async()=>{await window.Clerk.signOut();location.reload()};
+$("#signOutBtn").onclick=async()=>{await clerk.signOut();location.reload()};
 if(!profile)openProfile(true);
 render();
 // Competency-based question bank + optional GitHub JSON sync
@@ -179,4 +178,4 @@ async function syncGithub(){
 }
 setupQuestionBank();
 
-})();
+};
