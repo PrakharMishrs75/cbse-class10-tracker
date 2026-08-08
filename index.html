@@ -8,9 +8,26 @@
   </div>
 </div>
 <div class="shell" id="appShell"><aside class="side"><div class="brand"><div class="brandmark">10</div><div><b>CBSE Pro</b><small>Class 10 • 2026–27</small></div></div><div class="navlabel">WORKSPACE</div><button class="nav active" data-page="dashboard">⌂ <span>Dashboard</span></button><button class="nav" data-page="subjects">◫ <span>Syllabus</span></button><button class="nav" data-page="marks">◈ <span>Marks Tracker</span></button><button class="nav" data-page="revision">↻ <span>Revision</span></button><button class="nav" data-page="questions">🧠 <span>Question Bank</span></button><button class="nav" data-page="planner">🤖 <span>AI Planner</span></button><button class="nav" data-page="calendar">□ <span>Calendar</span></button><div class="sidebottom"><div class="streak"><span>🔥</span><div><b id="sideStreak">0 days</b><small>Study streak</small>
-<div class="cbse-streak-live" style="margin:12px 0;padding:16px;border-radius:16px;background:linear-gradient(135deg,#ff7a18,#ffb347);color:#fff;">
-  <div style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">🔥 Study Streak</div>
-  <div style="font-size:30px;font-weight:800;margin:3px 0;"><span data-streak-current>0</span> day<span data-streak-current>0</span></div>
+<section class="streak-hero" aria-label="Study streak">
+  <div class="streak-glow"></div>
+  <div class="streak-top">
+    <div>
+      <span class="streak-kicker">DAILY MOMENTUM</span>
+      <h3>🔥 Study Streak</h3>
+      <p data-streak-status>Complete one study activity today to keep your streak alive</p>
+    </div>
+    <div class="streak-flame">🔥</div>
+  </div>
+  <div class="streak-stats">
+    <div class="streak-main"><strong data-streak-current>0</strong><span data-streak-count-label>days</span></div>
+    <div class="streak-best"><span>🏆 Best</span><strong data-streak-best>0</strong></div>
+  </div>
+  <button class="streak-action" type="button" onclick="cbseRecordStudyActivity('Manual study completion')">
+    ✓ Mark today's study complete
+  </button>
+  <div class="streak-sync">☁️ Synced to your Clerk account when signed in</div>
+</section>
+<div style="font-size:30px;font-weight:800;margin:3px 0;"><span data-streak-current>0</span> day<span data-streak-current>0</span></div>
   <div style="font-size:12px;opacity:.9;">Best: <span data-streak-best>0</span> days</div>
   <div data-streak-status style="font-size:12px;margin-top:8px;">Study today to start your streak</div>
   <button type="button" onclick="cbseRecordStudyActivity('Manual study completion')" style="margin-top:10px;border:0;border-radius:10px;padding:9px 12px;font-weight:700;cursor:pointer;">✓ Mark study done</button>
