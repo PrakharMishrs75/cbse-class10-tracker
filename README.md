@@ -10,3 +10,6 @@ This version keeps the existing Clerk/GitHub Pages dashboard and adds two additi
 Replace the existing files in the GitHub repository with all files in this folder. Keep GitHub Pages set to `main` and `/ (root)`.
 
 The Google Drive files must remain shared as **Anyone with the link — Viewer** for students to open them.
+
+## AI Study Planner
+The dashboard includes a client-side personalized study planner. Students enter test date, subject, chapters, target marks, preparation level, weak areas and daily study hours. The planner creates and saves a day-by-day schedule locally. It does not require an exposed AI API key.

@@ -84,6 +84,60 @@ async function saveProfile(){
    $("#profileError").textContent="Could not save profile. Please try again.";
  }
 }
+
+function setupPlanner(){
+ const subj=$('#pSubject'); if(!subj) return;
+ Object.keys(syllabus).forEach(x=>subj.insertAdjacentHTML('beforeend',`<option value="${esc(x)}">${esc(x)}</option>`));
+ const saved=JSON.parse(localStorage.getItem('cbseAIPlanner')||'null');
+ if(saved){
+   ['pDate','pTarget','pHours','pLevel','pSubject','pChapters','pWeak'].forEach(id=>{if(saved[id]!==undefined && $('#'+id)) $('#'+id).value=saved[id]});
+   if(saved.planHtml) { $('#planOutput').innerHTML=saved.planHtml; $('#planSummary').textContent=saved.summary||'Saved plan'; }
+ }
+ const today=new Date(); today.setHours(0,0,0,0);
+ const min=today.toISOString().slice(0,10);
+ $('#pDate').min=min;
+ if(!$('#pDate').value){ const d=new Date(today); d.setDate(d.getDate()+7); $('#pDate').value=d.toISOString().slice(0,10); }
+ $('#generatePlan').onclick=generatePlan;
+ $('#clearPlan').onclick=()=>{localStorage.removeItem('cbseAIPlanner'); $('#planOutput').innerHTML='<div class="empty-plan"><b>Ready when you are.</b><p>Enter your test details and generate a fresh plan.</p></div>'; $('#planSummary').textContent='No plan generated yet.';};
+}
+function dateDiff(a,b){return Math.max(0,Math.ceil((new Date(a+'T00:00:00')-new Date(b+'T00:00:00'))/86400000));}
+function formatDate(d){return d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});}
+function incompleteChapters(subject){return (syllabus[subject]||[]).filter((_,i)=>!s.done[key(subject,i)]);}
+function generatePlan(){
+ const subject=$('#pSubject').value, testDate=$('#pDate').value, hours=Math.max(.5,+$('#pHours').value||0), target=Math.min(100,Math.max(1,+$('#pTarget').value||80)), level=$('#pLevel').value, weak=$('#pWeak').value.trim();
+ if(!subject||!testDate||!hours){alert('Please enter the test date, subject and study hours.');return;}
+ const today=new Date(); today.setHours(0,0,0,0); const todayStr=today.toISOString().slice(0,10); const days=dateDiff(testDate,todayStr);
+ if(days<1){alert('Choose a test date at least 1 day from today.');return;}
+ let raw=$('#pChapters').value.split(',').map(x=>x.trim()).filter(Boolean);
+ if(!raw.length) raw=incompleteChapters(subject);
+ if(!raw.length) raw=[subject+' revision'];
+ const priority=weak?weak.split(',').map(x=>x.trim().toLowerCase()).filter(Boolean):[];
+ const weighted=[]; raw.forEach(ch=>{const isWeak=priority.some(w=>ch.toLowerCase().includes(w)||w.includes(ch.toLowerCase())); weighted.push({ch,weight:isWeak?2:1});});
+ const totalWeight=weighted.reduce((a,x)=>a+x.weight,0);
+ const usableDays=Math.max(1,days); const totalHours=usableDays*hours;
+ const plan=[]; let idx=0;
+ for(let day=0;day<usableDays;day++){
+   const d=new Date(today); d.setDate(today.getDate()+day);
+   const isLast=day===usableDays-1;
+   let focus=[];
+   if(isLast) focus=[...weighted.map(x=>x.ch)];
+   else {
+     let slots=Math.max(1,Math.ceil(weighted.length/usableDays));
+     for(let k=0;k<slots && idx<weighted.length;k++){focus.push(weighted[idx%weighted.length].ch); idx++;}
+   }
+   if(!focus.length) focus=['Full revision + practice'];
+   let learning=Math.max(.25,Math.round(hours*(level==='weak'?.5:level==='average'?.35:.25)*4)/4);
+   let practice=Math.max(.25,Math.round(hours*(level==='strong'?.5:.4)*4)/4);
+   let revision=Math.max(.25,Math.round((hours-learning-practice)*4)/4);
+   if(isLast){learning=Math.min(learning,.5); practice=Math.max(.5,Math.round(hours*.55*4)/4); revision=Math.max(.25,Math.round((hours-learning-practice)*4)/4);}
+   plan.push({d,focus,learning,practice,revision});
+ }
+ const weakLine=weak?`Priority: ${esc(weak)}`:'Focus weak chapters first.';
+ const html=plan.map((x,i)=>`<article class="plan-day ${i===plan.length-1?'exam-eve':''}"><div class="plan-day-head"><span class="plan-day-num">${i+1}</span><div><b>${formatDate(x.d)}</b><small>${i===plan.length-1?'🔥 Final revision / test day':'Study day'}</small></div></div><div class="plan-focus"><b>Focus:</b> ${x.focus.map(esc).join(', ')}</div><div class="plan-blocks"><span>📖 Learn ${x.learning}h</span><span>🧠 Practice ${x.practice}h</span><span>🔁 Revise ${x.revision}h</span></div></article>`).join('');
+ const summary=`${subject} • ${usableDays} day${usableDays===1?'':'s'} • ${hours}h/day • Target ${target}%`;
+ $('#planSummary').textContent=summary; $('#planOutput').innerHTML=`<div class="plan-intro"><b>${summary}</b><p>${weakLine}</p></div>${html}`;
+ localStorage.setItem('cbseAIPlanner',JSON.stringify({pDate:testDate,pTarget:target,pHours:hours,pLevel:level,pSubject:subject,pChapters:$('#pChapters').value,pWeak:weak,planHtml:$('#planOutput').innerHTML,summary}));
+}
 function render(){
  const d=done(),t=total(),p=Math.round(d/t*100),marks=s.marks;
  $("#done").textContent=d;$("#left").textContent=t-d;$("#streak").textContent=s.streak||0;$("#sideStreak").textContent=(s.streak||0)+" days";$("#overall").textContent=p+"%";$("#avg").textContent=(marks.length?Math.round(marks.reduce((a,m)=>a+m.score/m.total*100,0)/marks.length):0)+"%";$(".circle").style.setProperty("--p",p+"%");
@@ -114,12 +168,13 @@ function renderCalendar(){
  for(let d=1;d<=days;d++){let date=new Date(y,m,d),id=date.toISOString().slice(0,10),today=new Date().toISOString().slice(0,10);out+=`<div class="day ${id===today?'today':''} ${s.events[id]?'has':''}" data-date="${id}"><b>${d}</b>${s.events[id]?"<div class='dot'></div>":""}</div>`}
  $("#days").innerHTML=out;$$("[data-date]").forEach(el=>el.onclick=()=>{let id=el.dataset.date;let task=prompt("Study task for "+id+":",s.events[id]||"");if(task===null)return;if(task.trim())s.events[id]=task;else delete s.events[id];save()})
 }
-function page(name){$$(".page").forEach(p=>p.classList.remove("active"));$("#"+name).classList.add("active");$$(".nav").forEach(n=>n.classList.toggle("active",n.dataset.page===name));$("#crumb").textContent=name.toUpperCase();$("#title").textContent=name==="dashboard"?`Good evening, ${profile?.name||"scholar"} 👋`:name==="subjects"?"Your syllabus":name==="marks"?"Marks tracker":name==="revision"?"Revision center":name==="questions"?"Competency Question Bank":"Study calendar"}
+function page(name){$$(".page").forEach(p=>p.classList.remove("active"));$("#"+name).classList.add("active");$$(".nav").forEach(n=>n.classList.toggle("active",n.dataset.page===name));$("#crumb").textContent=name.toUpperCase();$("#title").textContent=name==="dashboard"?`Good evening, ${profile?.name||"scholar"} 👋`:name==="subjects"?"Your syllabus":name==="marks"?"Marks tracker":name==="revision"?"Revision center":name==="questions"?"Competency Question Bank":name==="planner"?"AI Study Planner":"Study calendar"}
 $$("[data-page]").forEach(b=>b.onclick=()=>page(b.dataset.page));$("#search").oninput=renderSyllabus;
 $("#addMark").onclick=()=>{let subject=$("#mSubject").value.trim(),test=$("#mTest").value.trim(),score=+$("#mScore").value,total=+$("#mTotal").value;if(!subject||!test||!total||score<0||score>total){alert("Please enter valid subject, test, score and total marks.");return}s.marks.push({subject,test,score,total});["mSubject","mTest","mScore","mTotal"].forEach(id=>$("#"+id).value="");save()};
 $("#prev").onclick=()=>{cur.setMonth(cur.getMonth()-1);renderCalendar()};$("#next").onclick=()=>{cur.setMonth(cur.getMonth()+1);renderCalendar()};
 $("#theme").onclick=()=>{document.body.classList.toggle("dark");localStorage.setItem("cbseDark",document.body.classList.contains("dark"))};if(localStorage.getItem("cbseDark")==="true")document.body.classList.add("dark");
 updateProfileUI();
+setupPlanner();
 $("#saveProfile").onclick=saveProfile;
 $("#profileBtn").onclick=()=>openProfile();
 $("#profileModal").addEventListener("click",e=>{if(e.target.id==="profileModal" && profile)closeProfile()});
