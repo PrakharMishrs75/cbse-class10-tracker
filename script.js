@@ -131,7 +131,7 @@ function setupPlanner(){
    const old=keep?new Set((chaptersInput.value||'').split(',').map(x=>x.trim()).filter(Boolean)):new Set();
    const incomplete=new Set(incompleteChapters(subject));
    chaptersBox.innerHTML=all.map((ch,i)=>{
-     const checked=old.size?old.has(ch):incomplete.has(ch);
+     const checked=old.size?old.has(ch):false;
      const doneClass=s.done[key(subject,i)]?' is-done':'';
      return `<label class="planner-chapter${doneClass}"><input type="checkbox" data-planner-chapter value="${esc(ch)}" ${checked?'checked':''}><span>${esc(ch)}</span>${s.done[key(subject,i)]?'<small>✓ Done</small>':''}</label>`;
    }).join('');
