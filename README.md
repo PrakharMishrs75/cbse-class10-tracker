@@ -13,3 +13,7 @@ The Google Drive files must remain shared as **Anyone with the link — Viewer**
 
 ## AI Study Planner
 The dashboard includes a client-side personalized study planner. Students enter test date, subject, chapters, target marks, preparation level, weak areas and daily study hours. The planner creates and saves a day-by-day schedule locally. It does not require an exposed AI API key.
+
+
+## Hindi Course B chapter list
+The Syllabus Tracker and AI Planner use the 17 prescribed Class 10 Hindi Course B chapters from Sparsh Bhag-II and Sanchayan Bhag-II. Removed/non-prescribed lessons are not included.
