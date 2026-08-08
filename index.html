@@ -43,7 +43,7 @@
 </div>
 <div class="planner-layout">
 <div class="panel planner-card planner-input-card">
-  <div class="planner-card-title"><div class="planner-step">01</div><div><h3>Tell me about your test</h3><small>The more details you enter, the better the plan.</small></div></div>
+  <div class="planner-card-title"><div class="planner-step">01</div><div><h3>Tell me about your test</h3><small>The more details you enter, the better the plan.</small></div><button id="syncPlanner" class="clear-plan">↻ Sync dashboard</button></div>
   <div class="formgrid planner-form">
     <label>📅 Test date<input id="pDate" type="date"></label>
     <label>🎯 Target marks<input id="pTarget" type="number" min="1" max="100" value="80" placeholder="e.g. 90"></label>
@@ -61,7 +61,7 @@
 Leave blank and we'll use your incomplete syllabus."></textarea></label>
     <label class="planner-wide">⚠️ Weak areas / priorities<textarea id="pWeak" rows="3" placeholder="Example: numericals, case-based questions, formulas, map work"></textarea></label>
   </div>
-  <div class="planner-tip"><span>💡</span><span><b>Smart tip:</b> Don't overfill one day. The planner keeps time for learning, practice and revision.</span></div>
+  <div id="plannerSyncNote" class="planner-tip"><span>🔗</span><span>Not synced yet</span></div><div class="planner-tip"><span>💡</span><span><b>Smart tip:</b> Don't overfill one day. The planner keeps time for learning, practice and revision.</span></div>
   <button id="generatePlan" class="primary planner-generate"><span>✨</span> Generate My Personalized Plan</button>
 </div>
 <div class="panel planner-card planner-result-card">

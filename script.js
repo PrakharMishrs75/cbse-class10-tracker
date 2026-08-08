@@ -87,9 +87,7 @@ async function saveProfile(){
 
 function setupPlanner(){
  const subj=$('#pSubject'); if(!subj) return;
- // Keep the subject list in HTML so it is always available even if JS loads slowly.
  const validSubjects=Object.keys(syllabus);
- [...subj.options].forEach(o=>{ if(o.value && !validSubjects.includes(o.value)) o.remove(); });
  const saved=JSON.parse(localStorage.getItem('cbseAIPlanner')||'null');
  if(saved){
    ['pDate','pTarget','pHours','pLevel','pSubject','pChapters','pWeak'].forEach(id=>{if(saved[id]!==undefined && $('#'+id)) $('#'+id).value=saved[id]});
@@ -99,20 +97,48 @@ function setupPlanner(){
  const min=today.toISOString().slice(0,10);
  $('#pDate').min=min;
  if(!$('#pDate').value){ const d=new Date(today); d.setDate(d.getDate()+7); $('#pDate').value=d.toISOString().slice(0,10); }
+ function dashboardInsight(subject){
+   const completed=(syllabus[subject]||[]).filter((_,i)=>s.done[key(subject,i)]).length;
+   const totalCh=(syllabus[subject]||[]).length;
+   const incomplete=incompleteChapters(subject);
+   const subjectMarks=(s.marks||[]).filter(m=>String(m.subject).toLowerCase()===subject.toLowerCase());
+   const avg=subjectMarks.length?Math.round(subjectMarks.reduce((a,m)=>a+(m.score/m.total*100),0)/subjectMarks.length):null;
+   return {completed,totalCh,incomplete,avg,marks:subjectMarks};
+ }
+ const syncFromDashboard=()=>{
+   const subject=subj.value;
+   if(!subject)return;
+   const info=dashboardInsight(subject);
+   const chapters=incompleteChapters(subject);
+   if(!$('#pChapters').value.trim()) $('#pChapters').value=chapters.slice(0,12).join(', ');
+   if(info.avg!==null){
+     const target=Math.max(60,Math.min(95,Math.round(info.avg+10)));
+     $('#pTarget').value=target;
+     $('#pLevel').value=info.avg<50?'weak':info.avg<75?'average':'strong';
+   }
+   if(!$('#pWeak').value.trim() && info.avg!==null){
+     $('#pWeak').value=info.avg<60?'Focus on concepts, formulas and basic questions':info.avg<80?'Focus on mistakes, competency questions and timed practice':'Focus on timed practice, case-based questions and final revision';
+   }
+   const syncNote=$('#plannerSyncNote');
+   if(syncNote) syncNote.innerHTML=`✓ Synced with dashboard: <b>${info.completed}/${info.totalCh}</b> chapters complete${info.avg!==null?` • latest average <b>${info.avg}%</b>`:''}`;
+ };
  const refreshStats=()=>{
    const hours=Math.max(.5,+$('#pHours').value||0);
    const date=$('#pDate').value;
    const days=date?dateDiff(date,min):0;
    $('#plannerDays').textContent=days>0?days:'—';
    $('#plannerHours').textContent=hours?hours+'h':'—';
-   const readiness=[date,$('#pSubject').value,$('#pChapters').value.trim(),$('#pWeak').value.trim(),$('#pHours').value].filter(Boolean).length;
-   const pct=Math.round(readiness/5*100);
+   const readiness=[date,$('#pSubject').value,$('#pHours').value,$('#pTarget').value].filter(Boolean).length;
+   const pct=Math.round(readiness/4*100);
    $('#planReadiness').textContent=pct+'%'; $('#planReadinessBar').style.width=pct+'%';
  };
- ['pDate','pHours','pSubject','pChapters','pWeak'].forEach(id=>$('#'+id)?.addEventListener('input',refreshStats));
+ ['pDate','pHours','pTarget','pSubject'].forEach(id=>$('#'+id)?.addEventListener('input',refreshStats));
+ subj.addEventListener('change',()=>{syncFromDashboard();refreshStats();});
+ $('#syncPlanner').onclick=()=>{syncFromDashboard();refreshStats();};
  refreshStats();
  $('#generatePlan').onclick=generatePlan;
- $('#clearPlan').onclick=()=>{localStorage.removeItem('cbseAIPlanner'); $('#planOutput').innerHTML='<div class="empty-plan fancy-empty"><div class="empty-icon">🤖</div><b>Ready to build your plan?</b><p>Enter your test date, subject and study details. Your plan will balance <strong>Learn → Practice → Revise</strong>.</p><div class="empty-flow"><span>📖 Learn</span><i>→</i><span>🧠 Practice</span><i>→</i><span>🔁 Revise</span></div></div>'; $('#planSummary').textContent='Your plan will appear here.'; refreshStats();};
+ $('#clearPlan').onclick=()=>{localStorage.removeItem('cbseAIPlanner'); $('#planOutput').innerHTML='<div class="empty-plan fancy-empty"><div class="empty-icon">🤖</div><b>Ready to build your plan?</b><p>Use your dashboard data or enter your test details. The planner will balance <strong>Learn → Practice → Revise</strong>.</p><div class="empty-flow"><span>📖 Learn</span><i>→</i><span>🧠 Practice</span><i>→</i><span>🔁 Revise</span></div></div>'; $('#planSummary').textContent='Your plan will appear here.'; if($('#plannerSyncNote'))$('#plannerSyncNote').textContent='Not synced yet'; refreshStats();};
+ if(subj.value) syncFromDashboard();
 }
 
 function dateDiff(a,b){return Math.max(0,Math.ceil((new Date(a+'T00:00:00')-new Date(b+'T00:00:00'))/86400000));}
@@ -123,36 +149,56 @@ function generatePlan(){
  if(!subject||!testDate||!hours){alert('Please enter the test date, subject and study hours.');return;}
  const today=new Date(); today.setHours(0,0,0,0); const todayStr=today.toISOString().slice(0,10); const days=dateDiff(testDate,todayStr);
  if(days<1){alert('Choose a test date at least 1 day from today.');return;}
+ const info=(function(){
+   const completed=(syllabus[subject]||[]).filter((_,i)=>s.done[key(subject,i)]).length;
+   const totalCh=(syllabus[subject]||[]).length;
+   const incomplete=incompleteChapters(subject);
+   const subjectMarks=(s.marks||[]).filter(m=>String(m.subject).toLowerCase()===subject.toLowerCase());
+   const avg=subjectMarks.length?Math.round(subjectMarks.reduce((a,m)=>a+(m.score/m.total*100),0)/subjectMarks.length):null;
+   return {completed,totalCh,incomplete,avg};
+ })();
  let raw=$('#pChapters').value.split(',').map(x=>x.trim()).filter(Boolean);
- if(!raw.length) raw=incompleteChapters(subject);
+ if(!raw.length) raw=info.incomplete;
  if(!raw.length) raw=[subject+' revision'];
  const priority=weak?weak.split(',').map(x=>x.trim().toLowerCase()).filter(Boolean):[];
- const weighted=[]; raw.forEach(ch=>{const isWeak=priority.some(w=>ch.toLowerCase().includes(w)||w.includes(ch.toLowerCase())); weighted.push({ch,weight:isWeak?2:1});});
- const totalWeight=weighted.reduce((a,x)=>a+x.weight,0);
- const usableDays=Math.max(1,days); const totalHours=usableDays*hours;
+ const weighted=raw.map((ch,n)=>{
+   const isWeak=priority.some(w=>ch.toLowerCase().includes(w)||w.includes(ch.toLowerCase()));
+   const chapterIndex=(syllabus[subject]||[]).findIndex(x=>x.toLowerCase()===ch.toLowerCase());
+   const alreadyDone=chapterIndex>=0 && !!s.done[key(subject,chapterIndex)];
+   return {ch,weight:isWeak?3:(alreadyDone?0.7:1)};
+ }).filter(x=>x.weight>0);
+ const usableDays=Math.max(1,days);
+ const phase=Math.max(1,Math.ceil(usableDays*.6));
+ const practiceStart=Math.max(1,Math.floor(usableDays*.45));
  const plan=[]; let idx=0;
  for(let day=0;day<usableDays;day++){
    const d=new Date(today); d.setDate(today.getDate()+day);
    const isLast=day===usableDays-1;
+   const isPractice=day>=practiceStart-1;
    let focus=[];
-   if(isLast) focus=[...weighted.map(x=>x.ch)];
+   if(isLast) focus=weighted.map(x=>x.ch);
    else {
-     let slots=Math.max(1,Math.ceil(weighted.length/usableDays));
-     for(let k=0;k<slots && idx<weighted.length;k++){focus.push(weighted[idx%weighted.length].ch); idx++;}
+     const slots=Math.max(1,Math.ceil(weighted.length/Math.max(1,phase)));
+     for(let k=0;k<slots && idx<weighted.length;k++){focus.push(weighted[idx].ch);idx++;}
    }
-   if(!focus.length) focus=['Full revision + practice'];
-   let learning=Math.max(.25,Math.round(hours*(level==='weak'?.5:level==='average'?.35:.25)*4)/4);
-   let practice=Math.max(.25,Math.round(hours*(level==='strong'?.5:.4)*4)/4);
-   let revision=Math.max(.25,Math.round((hours-learning-practice)*4)/4);
-   if(isLast){learning=Math.min(learning,.5); practice=Math.max(.5,Math.round(hours*.55*4)/4); revision=Math.max(.25,Math.round((hours-learning-practice)*4)/4);}
-   plan.push({d,focus,learning,practice,revision});
+   if(!focus.length) focus=['Revision of completed chapters'];
+   let learn,practice,revision;
+   if(isLast){learn=Math.min(.5,hours*.15);practice=Math.max(.5,hours*.5);revision=Math.max(.25,hours-learn-practice);}
+   else if(!isPractice){learn=hours*(level==='weak'?.55:level==='average'?.45:.35);practice=hours*(level==='weak'?.25:.35);revision=hours-learn-practice;}
+   else {learn=hours*.2;practice=hours*(level==='strong'?.55:.5);revision=hours-learn-practice;}
+   const round=q=>Math.max(.25,Math.round(q*4)/4);
+   learn=round(learn);practice=round(practice);revision=round(Math.max(.25,hours-learn-practice));
+   plan.push({d,focus,learn,practice,revision,isLast,isPractice});
  }
- const weakLine=weak?`Priority: ${esc(weak)}`:'Focus weak chapters first.';
- const html=plan.map((x,i)=>`<article class="plan-day ${i===plan.length-1?'exam-eve':''}"><div class="plan-day-head"><span class="plan-day-num">${i+1}</span><div><b>${formatDate(x.d)}</b><small>${i===plan.length-1?'🔥 Final revision / test day':'Study day'}</small></div></div><div class="plan-focus"><b>Focus:</b> ${x.focus.map(esc).join(', ')}</div><div class="plan-blocks"><span>📖 Learn ${x.learning}h</span><span>🧠 Practice ${x.practice}h</span><span>🔁 Revise ${x.revision}h</span></div></article>`).join('');
+ const avgLine=info.avg!==null?` Dashboard average: ${info.avg}%.`:' No previous marks found for this subject.';
+ const syncLine=`Synced from syllabus: ${info.completed}/${info.totalCh} chapters complete.${avgLine}`;
+ const html=plan.map((x,i)=>`<article class="plan-day ${x.isLast?'exam-eve':''}"><div class="plan-day-head"><span class="plan-day-num">${i+1}</span><div><b>${formatDate(x.d)}</b><small>${x.isLast?'🔥 Final revision + mock test':x.isPractice?'🧠 Practice phase':'📖 Learning phase'}</small></div></div><div class="plan-focus"><b>Focus:</b> ${x.focus.map(esc).join(', ')}</div><div class="plan-blocks"><span>📖 Learn ${x.learn}h</span><span>🧠 Practice ${x.practice}h</span><span>🔁 Revise ${x.revision}h</span></div></article>`).join('');
  const summary=`${subject} • ${usableDays} day${usableDays===1?'':'s'} • ${hours}h/day • Target ${target}%`;
- $('#planSummary').textContent=summary; $('#planOutput').innerHTML=`<div class="plan-intro"><b>${summary}</b><p>${weakLine}</p></div>${html}`;
+ $('#planSummary').textContent=summary; $('#planOutput').innerHTML=`<div class="plan-intro"><b>${summary}</b><p>${esc(syncLine)} ${weak?`Priority: ${esc(weak)}.`:'Planner prioritised incomplete chapters and your dashboard progress.'}</p></div>${html}`;
+ if($('#plannerSyncNote')) $('#plannerSyncNote').innerHTML=`✓ Plan synced with <b>${info.completed}/${info.totalCh}</b> syllabus progress${info.avg!==null?` and <b>${info.avg}%</b> subject average`:''}`;
  localStorage.setItem('cbseAIPlanner',JSON.stringify({pDate:testDate,pTarget:target,pHours:hours,pLevel:level,pSubject:subject,pChapters:$('#pChapters').value,pWeak:weak,planHtml:$('#planOutput').innerHTML,summary}));
 }
+
 function render(){
  const d=done(),t=total(),p=Math.round(d/t*100),marks=s.marks;
  $("#done").textContent=d;$("#left").textContent=t-d;$("#streak").textContent=s.streak||0;$("#sideStreak").textContent=(s.streak||0)+" days";$("#overall").textContent=p+"%";$("#avg").textContent=(marks.length?Math.round(marks.reduce((a,m)=>a+m.score/m.total*100,0)/marks.length):0)+"%";$(".circle").style.setProperty("--p",p+"%");
