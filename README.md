@@ -3,8 +3,6 @@
 This version keeps the current Clerk/GitHub Pages dashboard, removes the study-streak UI, and adds two Google Drive PDF resources with Open PDF viewer buttons only.
 
 ## Additional PDFs
-1. https://drive.google.com/file/d/1wYVytYR6HlAKGH2rm3pTx6tC5xuFE91o/preview
-2. https://drive.google.com/file/d/1xQHJKhtKplw6jWLE_KeLUYQSm7PGtjiD/preview
 
 ## Upload
 Replace the existing files in the GitHub repository with all files in this folder. Keep GitHub Pages set to `main` and `/ (root)`.
