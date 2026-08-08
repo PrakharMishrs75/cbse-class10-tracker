@@ -9,17 +9,40 @@ window.startDashboard = async function(){
   if (!clerk.isSignedIn) {
     appShell.style.display = "none";
     const appUrl = new URL("/cbse-class10-tracker/", window.location.origin).toString();
-    clerk.mountSignIn(document.getElementById("clerkAuth"), {
-      // GitHub Pages is hosted under /cbse-class10-tracker/, not /.
-      // Use the actual current site URL so Clerk never redirects to the
-      // repository root and produces a GitHub Pages 404.
-      forceRedirectUrl: appUrl,
-      fallbackRedirectUrl: appUrl,
-      signUpForceRedirectUrl: appUrl,
-      signUpFallbackRedirectUrl: appUrl,
-      signUpUrl: appUrl,
-      routing: "hash"
-    });
+    // GitHub Pages is hosted under /cbse-class10-tracker/.
+    // Keep sign-in and sign-up as two real Clerk routes. Previously both
+    // signUpUrl and signInUrl pointed to the same page, so clicking
+    // "Sign up" simply mounted the sign-in screen again.
+    const signInUrl = appUrl + "#/sign-in";
+    const signUpUrl = appUrl + "#/sign-up";
+    const authBox = document.getElementById("clerkAuth");
+
+    const mountAuth = () => {
+      if (!window.Clerk || window.Clerk.isSignedIn) return;
+      try { window.Clerk.unmountSignIn(authBox); } catch (_) {}
+      try { window.Clerk.unmountSignUp(authBox); } catch (_) {}
+      authBox.innerHTML = "";
+
+      const isSignUp = window.location.hash.toLowerCase().startsWith("#/sign-up");
+      if (isSignUp) {
+        clerk.mountSignUp(authBox, {
+          routing: "hash",
+          signInUrl,
+          forceRedirectUrl: appUrl,
+          fallbackRedirectUrl: appUrl
+        });
+      } else {
+        clerk.mountSignIn(authBox, {
+          routing: "hash",
+          signUpUrl,
+          forceRedirectUrl: appUrl,
+          fallbackRedirectUrl: appUrl
+        });
+      }
+    };
+
+    mountAuth();
+    window.addEventListener("hashchange", mountAuth);
     clerk.addListener(() => { if (clerk.isSignedIn) location.reload(); });
     return;
   }
@@ -202,14 +225,54 @@ function generatePlan(){
 function render(){
  const d=done(),t=total(),p=Math.round(d/t*100),marks=s.marks;
  $("#done").textContent=d;$("#left").textContent=t-d;$("#streak").textContent=s.streak||0;$("#sideStreak").textContent=(s.streak||0)+" days";$("#overall").textContent=p+"%";$("#avg").textContent=(marks.length?Math.round(marks.reduce((a,m)=>a+m.score/m.total*100,0)/marks.length):0)+"%";$(".circle").style.setProperty("--p",p+"%");
- $("#subjectProgress").innerHTML=Object.keys(syllabus).map(x=>`<div class="progressitem"><div class="row"><span>${x}</span><b>${pct(x)}%</b></div><div class="bar"><div class="fill" style="width:${pct(x)}%"></div></div></div>`).join("");
+ $("#subjectProgress").innerHTML=Object.keys(syllabus).map(x=>`<button type="button" class="progressitem subject-jump" data-subject-jump="${esc(x)}" title="Open all ${syllabus[x].length} chapters of ${esc(x)}"><div class="row"><span>${esc(x)}</span><b>${pct(x)}%</b></div><div class="bar"><div class="fill" style="width:${pct(x)}%"></div></div><small>${syllabus[x].length} chapters • Click to view all</small></button>`).join("");
+ $$("[data-subject-jump]").forEach(el=>el.onclick=()=>openSubject(el.dataset.subjectJump));
  $("#marksMini").innerHTML=marks.length?marks.slice(-5).reverse().map(m=>`<div class="minirow"><span>${m.subject}</span><span>${m.test}</span><b class="score">${Math.round(m.score/m.total*100)}%</b></div>`).join(""):"<p style='color:var(--muted)'>No marks yet. Add your first test.</p>";
  renderSyllabus();renderMarks();renderRevision();renderCalendar();
 }
-function renderSyllabus(){
+function openSubject(subject){
+ if(!syllabus[subject]) return;
+ page("subjects");
+ if($("#search")) $("#search").value="";
+ renderSyllabus(subject);
+ const card=document.querySelector(`[data-subject-card="${CSS.escape(subject)}"]`);
+ if(card){
+   card.scrollIntoView({behavior:"smooth",block:"start"});
+   card.classList.add("subject-highlight");
+   setTimeout(()=>card.classList.remove("subject-highlight"),1200);
+ }
+}
+
+function renderSyllabus(openSubjectName=""){
  let q=($("#search")?.value||"").toLowerCase();
- $("#syllabus").innerHTML=Object.entries(syllabus).map(([sub,a])=>{let items=a.map((c,i)=>({c,i})).filter(x=>x.c.toLowerCase().includes(q));if(!items.length)return "";let d=pct(sub);return `<div class="panel subjectbox"><div class="subjecttop"><h3>${sub}</h3><span class="pill">${d}% complete</span></div><div class="chapters">${items.map(x=>`<label class="chapter ${s.done[key(sub,x.i)]?'done':''}"><input type="checkbox" data-sub="${sub}" data-i="${x.i}" ${s.done[key(sub,x.i)]?'checked':''}><span>${x.c}</span></label>`).join("")}</div></div>`}).join("");
-$$("[data-sub]").forEach(el=>el.onchange=()=>{s.done[key(el.dataset.sub,el.dataset.i)]=el.checked;if(el.checked)s.revision[key(el.dataset.sub,el.dataset.i)]={date:new Date().toLocaleDateString(),level:"Due today"};save()})
+ $("#syllabus").innerHTML=Object.entries(syllabus).map(([sub,a])=>{
+   let items=a.map((c,i)=>({c,i})).filter(x=>x.c.toLowerCase().includes(q));
+   if(!items.length)return "";
+   let d=pct(sub);
+   const isOpen=!openSubjectName || openSubjectName===sub;
+   return `<div class="panel subjectbox ${isOpen?'expanded':''}" data-subject-card="${esc(sub)}">
+     <button type="button" class="subjecttop subject-toggle" data-subject-toggle="${esc(sub)}" aria-expanded="${isOpen}">
+       <span><h3>${esc(sub)}</h3><small>${a.length} chapters • ${a.filter((_,i)=>s.done[key(sub,i)]).length} completed</small></span>
+       <span class="subject-actions"><span class="pill">${d}% complete</span><span class="toggle-icon">${isOpen?'−':'+'}</span></span>
+     </button>
+     <div class="chapters" ${isOpen?'':'hidden'}>${items.map(x=>`<label class="chapter ${s.done[key(sub,x.i)]?'done':''}"><input type="checkbox" data-sub="${esc(sub)}" data-i="${x.i}" ${s.done[key(sub,x.i)]?'checked':''}><span>${esc(x.c)}</span></label>`).join("")}</div>
+   </div>`;
+ }).join("");
+
+ $$("[data-subject-toggle]").forEach(btn=>btn.onclick=()=>{
+   const card=btn.closest(".subjectbox"), chapters=card.querySelector(".chapters");
+   const open=btn.getAttribute("aria-expanded")==="true";
+   btn.setAttribute("aria-expanded",String(!open));
+   card.classList.toggle("expanded",!open);
+   chapters.hidden=open;
+   btn.querySelector(".toggle-icon").textContent=open?"+":"−";
+ });
+
+ $$("[data-sub]").forEach(el=>el.onchange=()=>{
+   s.done[key(el.dataset.sub,el.dataset.i)]=el.checked;
+   if(el.checked)s.revision[key(el.dataset.sub,el.dataset.i)]={date:new Date().toLocaleDateString(),level:"Due today"};
+   save();
+ });
 }
 function renderMarks(){
  const box=$("#marksTable");if(!s.marks.length){box.innerHTML="<p style='color:var(--muted)'>No results recorded.</p>";return}

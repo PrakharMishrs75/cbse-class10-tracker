@@ -60,3 +60,60 @@ header h1{letter-spacing:-.5px}.panel{transition:box-shadow .2s,border-color .2s
 @media (max-width:380px){
   .shell main{padding-left:11px;padding-right:11px}.kpis{gap:7px}.kpis>div{padding:10px}.kico{display:none}.kpis>div{grid-template-columns:1fr}.welcome-actions{display:grid}.welcome-actions button{width:100%}.ai-hero-stats{gap:6px}.ai-hero-stats div{padding:10px}.mobile-nav{left:7px;right:7px}.mobile-nav small{font-size:7px}
 }
+
+/* Working streak card */
+.cbse-streak-live{box-sizing:border-box;max-width:100%;box-shadow:0 10px 24px rgba(0,0,0,.12)}
+@media(max-width:600px){.cbse-streak-live{margin:10px 0;padding:14px}.cbse-streak-live button{width:100%}}
+
+/* Clickable subjects + expandable chapter lists */
+.progressitem.subject-jump{
+  width:100%;
+  display:block;
+  border:0;
+  padding:0;
+  text-align:left;
+  background:transparent;
+  color:inherit;
+  cursor:pointer;
+  border-radius:12px;
+}
+.progressitem.subject-jump:hover{
+  background:var(--soft);
+  padding:10px;
+  margin-left:-10px;
+  margin-right:-10px;
+  width:calc(100% + 20px);
+}
+.progressitem.subject-jump small{
+  display:block;
+  margin-top:6px;
+  color:var(--muted);
+  font-size:10px;
+}
+.subject-toggle{
+  width:100%;
+  border:0;
+  padding:0;
+  background:transparent;
+  color:inherit;
+  cursor:pointer;
+  text-align:left;
+  margin-bottom:11px;
+}
+.subject-toggle > span:first-child{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+.subject-toggle h3{margin:0}
+.subject-toggle small{color:var(--muted);font-size:11px}
+.subject-actions{display:flex;align-items:center;gap:8px}
+.toggle-icon{
+  width:24px;height:24px;border:1px solid var(--line);border-radius:8px;
+  display:grid;place-items:center;font-weight:800;font-size:16px;
+}
+.subjectbox.subject-highlight{
+  box-shadow:0 0 0 3px rgba(108,92,231,.18);
+  transition:box-shadow .2s ease;
+}
+.chapters[hidden]{display:none}
