@@ -36,39 +36,21 @@
 <div class="panel github-panel"><div><h3>GitHub question-bank sync</h3><p>Optional: load your own <code>question-bank.json</code> from GitHub. This does not replace the official CBSE PDFs above.</p></div><div class="github-row"><input id="githubUrl" placeholder="https://raw.githubusercontent.com/USERNAME/REPO/main/question-bank.json"><button id="syncGithub" class="primary">Sync GitHub</button></div><small id="githubStatus" class="github-status"></small></div>
 </section>
 <section id="planner" class="page">
-<div class="ai-hero">
-  <div class="ai-orb">✦</div>
-  <div class="ai-hero-copy"><span class="ai-badge">✦ SMART STUDY PLANNER</span><h2>Plan smarter. Study with a purpose.</h2><p>Tell us about your next test and CBSE Pro will turn your time, chapters and weak areas into a practical day-by-day plan.</p></div>
-  <div class="ai-hero-stats"><div><b id="plannerDays">—</b><span>days available</span></div><div><b id="plannerHours">—</b><span>hours/day</span></div></div>
-</div>
+<div class="pagehead"><div><h2>🤖 AI Study Planner</h2><p>Enter your test details and get a personalized day-by-day study plan.</p></div></div>
 <div class="planner-layout">
-<div class="panel planner-card planner-input-card">
-  <div class="planner-card-title"><div class="planner-step">01</div><div><h3>Tell me about your test</h3><small>The more details you enter, the better the plan.</small></div></div>
-  <div class="formgrid planner-form">
-    <label>📅 Test date<input id="pDate" type="date"></label>
-    <label>🎯 Target marks<input id="pTarget" type="number" min="1" max="100" value="80" placeholder="e.g. 90"></label>
-    <label>⏱️ Study hours / day<input id="pHours" type="number" min="0.5" max="12" step="0.5" value="2" placeholder="e.g. 3"></label>
-    <label>📊 Preparation level<select id="pLevel"><option value="weak">🔴 Starting from basics</option><option value="average" selected>🟡 I know some topics</option><option value="strong">🟢 Mostly prepared</option></select></label>
-    <label class="planner-wide">📚 Subject<select id="pSubject">
-      <option value="">Choose your subject…</option>
-      <option value="Mathematics">📐 Mathematics</option>
-      <option value="Science">🔬 Science</option>
-      <option value="Social Science">🌍 Social Science</option>
-      <option value="English">📖 English</option>
-      <option value="Hindi">🇮🇳 Hindi</option>
-    </select></label>
-    <label class="planner-wide">📘 Chapters to test<textarea id="pChapters" rows="4" placeholder="Example: Trigonometry, Coordinate Geometry, Statistics
-Leave blank and we'll use your incomplete syllabus."></textarea></label>
-    <label class="planner-wide">⚠️ Weak areas / priorities<textarea id="pWeak" rows="3" placeholder="Example: numericals, case-based questions, formulas, map work"></textarea></label>
-  </div>
-  <div class="planner-tip"><span>💡</span><span><b>Smart tip:</b> Don't overfill one day. The planner keeps time for learning, practice and revision.</span></div>
-  <button id="generatePlan" class="primary planner-generate"><span>✨</span> Generate My Personalized Plan</button>
+<div class="panel"><div class="panelhead"><div><h3>Test details</h3><small>Tell the planner what you need to prepare for.</small></div></div>
+<div class="formgrid planner-form">
+<label>Test date<input id="pDate" type="date"></label>
+<label>Target marks<input id="pTarget" type="number" min="1" max="100" value="80" placeholder="e.g. 90"></label>
+<label>Study hours per day<input id="pHours" type="number" min="0.5" max="12" step="0.5" value="2" placeholder="e.g. 3"></label>
+<label>Current preparation<select id="pLevel"><option value="weak">I am weak / starting from basics</option><option value="average" selected>I know some topics</option><option value="strong">Mostly prepared</option></select></label>
+<label class="planner-wide">Subject<select id="pSubject"><option value="">Select subject</option></select></label>
+<label class="planner-wide">Chapters to test<textarea id="pChapters" rows="4" placeholder="Enter chapters separated by commas, or leave blank to use your incomplete syllabus."></textarea></label>
+<label class="planner-wide">Weak areas / priorities<textarea id="pWeak" rows="3" placeholder="e.g. Trigonometry, numericals, case-based questions"></textarea></label>
 </div>
-<div class="panel planner-card planner-result-card">
-  <div class="planner-result-head"><div class="planner-card-title"><div class="planner-step purple">02</div><div><h3>Your personalized plan</h3><small id="planSummary">Your plan will appear here.</small></div></div><button id="clearPlan" class="clear-plan">Clear</button></div>
-  <div class="planner-mini-progress"><div><span>Plan readiness</span><b id="planReadiness">0%</b></div><div class="mini-track"><i id="planReadinessBar"></i></div></div>
-  <div id="planOutput" class="plan-output"><div class="empty-plan fancy-empty"><div class="empty-icon">🤖</div><b>Ready to build your plan?</b><p>Enter your test date, subject and study details. Your plan will balance <strong>Learn → Practice → Revise</strong> so you know exactly what to do each day.</p><div class="empty-flow"><span>📖 Learn</span><i>→</i><span>🧠 Practice</span><i>→</i><span>🔁 Revise</span></div></div></div>
+<button id="generatePlan" class="primary planner-generate">✨ Generate my plan</button>
 </div>
+<div class="panel"><div class="panelhead"><div><h3>Your plan</h3><small id="planSummary">No plan generated yet.</small></div><button id="clearPlan">Clear</button></div><div id="planOutput" class="plan-output"><div class="empty-plan"><b>Ready when you are.</b><p>Enter your test date, subject and preparation details. The planner will split your available days and study time across learning, practice and revision.</p></div></div></div>
 </div>
 </section>
 <section id="calendar" class="page"><div class="pagehead"><div><h2>Study calendar</h2><p>Plan your study sessions and daily targets.</p></div></div><div class="calendar-wrap panel"><div class="cal-top"><button id="prev">‹</button><h3 id="month"></h3><button id="next">›</button></div><div class="week"><b>Sun</b><b>Mon</b><b>Tue</b><b>Wed</b><b>Thu</b><b>Fri</b><b>Sat</b></div><div id="days" class="days"></div></div></section>

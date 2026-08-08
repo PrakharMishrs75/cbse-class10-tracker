@@ -87,9 +87,7 @@ async function saveProfile(){
 
 function setupPlanner(){
  const subj=$('#pSubject'); if(!subj) return;
- // Keep the subject list in HTML so it is always available even if JS loads slowly.
- const validSubjects=Object.keys(syllabus);
- [...subj.options].forEach(o=>{ if(o.value && !validSubjects.includes(o.value)) o.remove(); });
+ Object.keys(syllabus).forEach(x=>subj.insertAdjacentHTML('beforeend',`<option value="${esc(x)}">${esc(x)}</option>`));
  const saved=JSON.parse(localStorage.getItem('cbseAIPlanner')||'null');
  if(saved){
    ['pDate','pTarget','pHours','pLevel','pSubject','pChapters','pWeak'].forEach(id=>{if(saved[id]!==undefined && $('#'+id)) $('#'+id).value=saved[id]});
@@ -99,22 +97,9 @@ function setupPlanner(){
  const min=today.toISOString().slice(0,10);
  $('#pDate').min=min;
  if(!$('#pDate').value){ const d=new Date(today); d.setDate(d.getDate()+7); $('#pDate').value=d.toISOString().slice(0,10); }
- const refreshStats=()=>{
-   const hours=Math.max(.5,+$('#pHours').value||0);
-   const date=$('#pDate').value;
-   const days=date?dateDiff(date,min):0;
-   $('#plannerDays').textContent=days>0?days:'—';
-   $('#plannerHours').textContent=hours?hours+'h':'—';
-   const readiness=[date,$('#pSubject').value,$('#pChapters').value.trim(),$('#pWeak').value.trim(),$('#pHours').value].filter(Boolean).length;
-   const pct=Math.round(readiness/5*100);
-   $('#planReadiness').textContent=pct+'%'; $('#planReadinessBar').style.width=pct+'%';
- };
- ['pDate','pHours','pSubject','pChapters','pWeak'].forEach(id=>$('#'+id)?.addEventListener('input',refreshStats));
- refreshStats();
  $('#generatePlan').onclick=generatePlan;
- $('#clearPlan').onclick=()=>{localStorage.removeItem('cbseAIPlanner'); $('#planOutput').innerHTML='<div class="empty-plan fancy-empty"><div class="empty-icon">🤖</div><b>Ready to build your plan?</b><p>Enter your test date, subject and study details. Your plan will balance <strong>Learn → Practice → Revise</strong>.</p><div class="empty-flow"><span>📖 Learn</span><i>→</i><span>🧠 Practice</span><i>→</i><span>🔁 Revise</span></div></div>'; $('#planSummary').textContent='Your plan will appear here.'; refreshStats();};
+ $('#clearPlan').onclick=()=>{localStorage.removeItem('cbseAIPlanner'); $('#planOutput').innerHTML='<div class="empty-plan"><b>Ready when you are.</b><p>Enter your test details and generate a fresh plan.</p></div>'; $('#planSummary').textContent='No plan generated yet.';};
 }
-
 function dateDiff(a,b){return Math.max(0,Math.ceil((new Date(a+'T00:00:00')-new Date(b+'T00:00:00'))/86400000));}
 function formatDate(d){return d.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});}
 function incompleteChapters(subject){return (syllabus[subject]||[]).filter((_,i)=>!s.done[key(subject,i)]);}
