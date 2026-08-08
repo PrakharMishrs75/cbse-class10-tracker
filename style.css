@@ -60,3 +60,7 @@ header h1{letter-spacing:-.5px}.panel{transition:box-shadow .2s,border-color .2s
 @media (max-width:380px){
   .shell main{padding-left:11px;padding-right:11px}.kpis{gap:7px}.kpis>div{padding:10px}.kico{display:none}.kpis>div{grid-template-columns:1fr}.welcome-actions{display:grid}.welcome-actions button{width:100%}.ai-hero-stats{gap:6px}.ai-hero-stats div{padding:10px}.mobile-nav{left:7px;right:7px}.mobile-nav small{font-size:7px}
 }
+
+/* Working streak card */
+.cbse-streak-live{box-sizing:border-box;max-width:100%;box-shadow:0 10px 24px rgba(0,0,0,.12)}
+@media(max-width:600px){.cbse-streak-live{margin:10px 0;padding:14px}.cbse-streak-live button{width:100%}}
