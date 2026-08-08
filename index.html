@@ -65,8 +65,10 @@
       <option value="English">📖 English</option>
       <option value="Hindi Course B">🇮🇳 Hindi Course B</option>
     </select></label>
-    <label class="planner-wide">📘 Chapters to test<textarea id="pChapters" rows="4" placeholder="Example: Trigonometry, Coordinate Geometry, Statistics
-Leave blank and we'll use your incomplete syllabus."></textarea></label>
+    <label class="planner-wide">📘 Chapters to test
+      <div id="plannerChapters" class="planner-chapters"><span class="planner-placeholder">Choose a subject to see its chapters.</span></div>
+      <textarea id="pChapters" rows="2" hidden></textarea>
+    </label>
     <label class="planner-wide">⚠️ Weak areas / priorities<textarea id="pWeak" rows="3" placeholder="Example: numericals, case-based questions, formulas, map work"></textarea></label>
   </div>
   <div id="plannerSyncNote" class="planner-tip"><span>🔗</span><span>Not synced yet</span></div><div class="planner-tip"><span>💡</span><span><b>Smart tip:</b> Don't overfill one day. The planner keeps time for learning, practice and revision.</span></div>

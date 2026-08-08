@@ -117,3 +117,10 @@ header h1{letter-spacing:-.5px}.panel{transition:box-shadow .2s,border-color .2s
   transition:box-shadow .2s ease;
 }
 .chapters[hidden]{display:none}
+.planner-chapters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px;max-height:260px;overflow:auto;padding:4px}
+.planner-chapter{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--card);cursor:pointer;font-size:13px}
+.planner-chapter input{accent-color:var(--primary)}
+.planner-chapter.is-done{opacity:.65}
+.planner-chapter small{margin-left:auto;color:var(--muted);font-size:11px}
+.planner-placeholder{display:block;padding:12px;color:var(--muted);border:1px dashed var(--line);border-radius:10px}
+@media(max-width:700px){.planner-chapters{grid-template-columns:1fr}}
