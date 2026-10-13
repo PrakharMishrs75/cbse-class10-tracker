@@ -1,17 +1,11 @@
-# CBSE Pro Class 10 — GitHub-ready PDF Library
+# SCTS Student Tracker — Class 10 (2026–27)
 
-This version keeps the current Clerk/GitHub Pages dashboard, removes the study-streak UI, and adds two Google Drive PDF resources with Open PDF viewer buttons only.
+Sri Chaitanya Techno School student dashboard: syllabus tracker, test planner, marks, revision, study planner, calendar and chapter-wise Science & Maths question banks.
 
-## Additional PDFs
+## Files
+- `index.html`, `style.css`, `theme.css`, `script.js`, `papers.js`, `logo.png` — the site (keep in the repo root)
+- `papers/science/` and `papers/maths/` — chapter-wise competency PDFs used by the Question Banks
+- Sign-in is handled by Clerk (keys in `index.html`, redirects in `script.js`)
 
 ## Upload
-Replace the existing files in the GitHub repository with all files in this folder. Keep GitHub Pages set to `main` and `/ (root)`.
-
-The Google Drive files must remain shared as **Anyone with the link — Viewer** for students to open them. The app uses the Google Drive preview viewer rather than a download link.
-
-## AI Study Planner
-The dashboard includes a client-side personalized study planner. Students enter test date, subject, chapters, target marks, preparation level, weak areas and daily study hours. The planner creates and saves a day-by-day schedule locally. It does not require an exposed AI API key.
-
-
-## Hindi Course B chapter list
-The Syllabus Tracker and AI Planner use the 17 prescribed Class 10 Hindi Course B chapters from Sparsh Bhag-II and Sanchayan Bhag-II. Removed/non-prescribed lessons are not included.
+Upload everything to the repo root (GitHub Pages: `main` / root). Upload the `papers` folder in two commits (science, then maths) because of its size.

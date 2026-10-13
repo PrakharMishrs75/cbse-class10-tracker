@@ -1,4 +1,4 @@
-window.CLERK_APPEARANCE={variables:{colorPrimary:"#6d4cff",borderRadius:"12px",fontFamily:"Inter, sans-serif"},elements:{rootBox:{width:"100%"},cardBox:{boxShadow:"none",width:"100%"},card:{boxShadow:"none",border:"0",padding:"0",width:"100%",background:"transparent"}}};
+window.CLERK_APPEARANCE={variables:{colorPrimary:"#0d59af",borderRadius:"12px",fontFamily:"Open Sans, sans-serif"},elements:{rootBox:{width:"100%"},cardBox:{boxShadow:"none",width:"100%"},card:{boxShadow:"none",border:"0",padding:"0",width:"100%",background:"transparent"}}};
 window.startDashboard = async function(){
   const authScreen=document.getElementById("authScreen");
   const appShell=document.getElementById("appShell");
@@ -62,7 +62,7 @@ const syllabus={
 };
 let s=JSON.parse(localStorage.getItem("cbsePro")||'{"done":{},"marks":[],"revision":{},"events":{}}');
 s.tests=s.tests||[];s.hist=s.hist||{};
-const SHORT={"Mathematics":"Maths","Social Science":"SST","Hindi Course B":"Hindi","Information Technology":"IT"},COLORS=["#6d4cff","#10b5a5","#ff7a59","#e0a100","#e0489b","#3b8cf0","#8a5cf6"];
+const SHORT={"Mathematics":"Maths","Social Science":"SST","Hindi Course B":"Hindi","Information Technology":"IT"},COLORS=["#0d59af","#10b5a5","#e23b2e","#e0a100","#e0489b","#3b8cf0","#8a5cf6"];
 function greet(){const h=new Date().getHours();return h<12?"Good morning":h<17?"Good afternoon":"Good evening"}
 let profile=(function(){
  const u=clerk.user;
@@ -281,7 +281,7 @@ function renderCharts(){
  const ks=Object.keys(s.hist).sort().slice(-14);
  if(ks.length<2){$("#chartTrend").innerHTML='<div class="chartnote">📈 Tick off chapters on two different days to see your trend line.</div>';return}
  const pts=ks.map((k,i)=>[20+i*(320/(ks.length-1)),170-s.hist[k]*1.4]),line=pts.map(p=>p.join(",")).join(" ");
- $("#chartTrend").innerHTML=`<svg viewBox="0 0 360 215"><defs><linearGradient id="ta" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6d4cff" stop-opacity=".35"/><stop offset="1" stop-color="#6d4cff" stop-opacity="0"/></linearGradient></defs>${[0,50,100].map(v=>`<line x1="20" x2="340" y1="${170-v*1.4}" y2="${170-v*1.4}" stroke="#8883" stroke-dasharray="3 4"/><text x="0" y="${174-v*1.4}" style="font-size:9px">${v}</text>`).join("")}<polygon points="20,170 ${line} 340,170" fill="url(#ta)"/><polyline points="${line}" fill="none" stroke="#6d4cff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#fff" stroke="#6d4cff" stroke-width="2.5"/>`).join("")}<text x="20" y="195">${ks[0].slice(5)}</text><text x="340" y="195" text-anchor="end">${ks[ks.length-1].slice(5)}</text></svg>`;
+ $("#chartTrend").innerHTML=`<svg viewBox="0 0 360 215"><defs><linearGradient id="ta" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d59af" stop-opacity=".35"/><stop offset="1" stop-color="#0d59af" stop-opacity="0"/></linearGradient></defs>${[0,50,100].map(v=>`<line x1="20" x2="340" y1="${170-v*1.4}" y2="${170-v*1.4}" stroke="#8883" stroke-dasharray="3 4"/><text x="0" y="${174-v*1.4}" style="font-size:9px">${v}</text>`).join("")}<polygon points="20,170 ${line} 340,170" fill="url(#ta)"/><polyline points="${line}" fill="none" stroke="#0d59af" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#fff" stroke="#0d59af" stroke-width="2.5"/>`).join("")}<text x="20" y="195">${ks[0].slice(5)}</text><text x="340" y="195" text-anchor="end">${ks[ks.length-1].slice(5)}</text></svg>`;
 }
 function testStats(t){let tot=0,dn=0;const parts=Object.entries(t.sel).filter(([sub])=>syllabus[sub]).map(([sub,ix])=>{const d=ix.filter(i=>s.done[key(sub,i)]).length;tot+=ix.length;dn+=d;return {sub,n:ix.length,d}});return {tot,dn,parts,p:tot?Math.round(dn/tot*100):0}}
 function renderTests(){
