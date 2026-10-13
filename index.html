@@ -1,30 +1,27 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CBSE Pro • Class 10</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"></head><body>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CBSE Pro • Class 10</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="theme.css"></head><body>
 <div id="authScreen" class="auth-screen">
-  <div class="auth-card">
-    <div class="auth-brand"><div class="brandmark">10</div><div><b>CBSE Pro</b><small>Class 10 • 2026–27</small></div></div>
-    <h1>Welcome to your student dashboard</h1>
-    <p>Sign in to save your syllabus progress, marks, revision and profile across devices.</p>
-    <div id="clerkAuth"></div>
-  </div>
+  <div class="auth-art"><div class="auth-brand"><div class="brandmark">10</div><div><b>CBSE Pro</b><small>Class 10 • 2026–27</small></div></div>
+    <h1>Study smarter for your Class 10 boards.</h1><p>One place for your syllabus, test dates, marks and practice papers.</p>
+    <ul class="auth-points"><li>📚 Track every chapter across all subjects</li><li>🗓️ Set test dates and pick the syllabus</li><li>📈 See your progress on live graphs</li></ul></div>
+  <div class="auth-card"><h2>Welcome back 👋</h2><p>Sign in to save your progress on every device.</p><div id="clerkAuth"></div></div>
 </div>
-<div class="shell" id="appShell"><aside class="side"><div class="brand"><div class="brandmark">10</div><div><b>CBSE Pro</b><small>Class 10 • 2026–27</small></div></div><div class="navlabel">WORKSPACE</div><button class="nav active" data-page="dashboard">⌂ <span>Dashboard</span></button><button class="nav" data-page="subjects">◫ <span>Syllabus</span></button><button class="nav" data-page="marks">◈ <span>Marks Tracker</span></button><button class="nav" data-page="revision">↻ <span>Revision</span></button><button class="nav" data-page="questions">🧠 <span>Question Bank</span></button><button class="nav" data-page="planner">🤖 <span>AI Planner</span></button><button class="nav" data-page="calendar">□ <span>Calendar</span></button><div class="sidebottom"><button id="theme" class="theme">☾ &nbsp; Appearance</button></div></aside>
+<div class="shell" id="appShell"><aside class="side"><div class="brand"><div class="brandmark">10</div><div><b>CBSE Pro</b><small>Class 10 • 2026–27</small></div></div><div class="navlabel">WORKSPACE</div><button class="nav active" data-page="dashboard">⌂ <span>Dashboard</span></button><button class="nav" data-page="subjects">◫ <span>Syllabus</span></button><button class="nav" data-page="tests">🗓 <span>Tests</span></button><button class="nav" data-page="marks">◈ <span>Marks Tracker</span></button><button class="nav" data-page="revision">↻ <span>Revision</span></button><button class="nav" data-page="questions">🧠 <span>Question Bank</span></button><button class="nav" data-page="planner">🤖 <span>AI Planner</span></button><button class="nav" data-page="calendar">□ <span>Calendar</span></button><div class="sidebottom"><button id="theme" class="theme">☾ &nbsp; Appearance</button></div></aside>
 <main><header><div><div class="crumb">CLASS 10 / <span id="crumb">DASHBOARD</span></div><h1 id="title">Good evening, scholar 👋</h1></div><div class="head-actions"><button id="profileBtn" class="avatar" aria-label="Open student profile">P</button></div></header>
 <section id="dashboard" class="page active"><div class="welcome"><div><span class="badge">CBSE 2026–27</span><h2>Your progress, at a glance.</h2><p>Stay consistent and turn small study sessions into board-ready preparation.</p><div class="welcome-actions"><button data-page="subjects">Continue syllabus →</button><button class="ghost" data-page="marks">Update marks</button></div></div><div class="big-progress"><div class="circle"><b id="overall">0%</b><small>complete</small></div></div></div>
-<div class="kpis"><div><span class="kico">✓</span><b id="done">0</b><small>Chapters done</small></div><div><span class="kico">◫</span><b id="left">0</b><small>Chapters left</small></div><div><span class="kico">★</span><b id="avg">0%</b><small>Average marks</small></div></div>
+<div class="kpis"><div><span class="kico">✓</span><b id="done">0</b><small>Chapters done</small></div><div><span class="kico">◫</span><b id="left">0</b><small>Chapters left</small></div><div><span class="kico">★</span><b id="avg">0%</b><small>Average marks</small></div><div><span class="kico">🗓</span><b id="nextTest">—</b><small id="nextTestLbl">No test scheduled</small></div></div>
+<div class="chartrow"><div class="panel"><div class="panelhead"><div><h3>Syllabus completion by subject</h3><small>Share of chapters you have finished</small></div></div><div id="chartBars"></div></div><div class="panel"><div class="panelhead"><div><h3>Progress trend</h3><small>Overall % over your last study days</small></div></div><div id="chartTrend"></div></div></div>
 <div class="grid2"><div class="panel"><div class="panelhead"><div><h3>Subject progress</h3><small>Completion across your syllabus</small></div><button data-page="subjects">View all</button></div><div id="subjectProgress"></div></div><div class="panel"><div class="panelhead"><div><h3>Marks snapshot</h3><small>Your latest test scores</small></div><button data-page="marks">Manage</button></div><div id="marksMini"></div></div></div>
 </section>
 <section id="subjects" class="page"><div class="pagehead"><div><h2>Syllabus tracker</h2><p>Mark chapters complete as you finish them.</p></div><input id="search" placeholder="Search chapter…"></div><div id="syllabus"></div></section>
 <section id="marks" class="page"><div class="pagehead"><div><h2>Marks tracker</h2><p>Record tests and watch your average improve.</p></div></div><div class="marks-layout"><div class="panel"><div class="panelhead"><h3>Add a test</h3></div><div class="formgrid"><input id="mSubject" placeholder="Subject"><input id="mTest" placeholder="Test name"><input id="mScore" type="number" min="0" placeholder="Marks scored"><input id="mTotal" type="number" min="1" placeholder="Total marks"></div><button id="addMark" class="primary">Add result</button></div><div class="panel"><div class="panelhead"><h3>Results</h3></div><div id="marksTable"></div></div></div></section>
 <section id="revision" class="page"><div class="pagehead"><div><h2>Revision center</h2><p>Use spaced revision to keep completed chapters fresh.</p></div></div><div id="revisionList" class="revision-grid"></div></section>
-<section id="questions" class="page"><div class="pagehead"><div><h2>CBSE Competency Question Banks</h2><p>Class 10 • Mathematics and Science practice question banks.</p></div></div>
-<div class="cbse-note panel"><b>Question Bank PDFs</b><span>Open the complete volume directly in a new tab.</span></div>
+<section id="questions" class="page"><div class="pagehead"><div><h2>Competency practice papers</h2><p>CBSE competency-focused practice questions for Class 10.</p></div></div>
 <div class="subject-pdf-grid">
-<div class="subject-pdf-card panel"><div class="subject-pdf-head"><div class="pdf-icon">📘</div><div><h3>Mathematics — Class 10</h3><p>Competency Focused Practice Questions.</p></div></div>
-<div class="pdf-volume"><div><b>Volume 1</b><small>Mathematics • Grade 10</small></div><a class="pdf-link" href="Mathematics-Volume-1.pdf" target="_blank" rel="noopener">Open PDF ↗</a></div>
-
-<div class="pdf-volume"><div><b>Volume 1</b><small>Science • Grade 10</small></div><a class="pdf-link" href="Science-Volume-1.pdf" target="_blank" rel="noopener">Open PDF ↗</a></div>
-
-</section>
+<div class="subject-pdf-card panel"><div class="subject-pdf-head"><div class="pdf-icon">🔬</div><div><h3>Science — Class 10</h3><p>Competency Focused Practice Questions • CBSE &amp; Educational Initiatives • 145 pages</p></div></div>
+<div class="pdf-volume"><div><b>Volume 1</b><small>All chapters • item booklet</small></div><div class="pdfbtns"><a class="pdf-link" href="Science-Volume-1.pdf" target="_blank" rel="noopener">Open ↗</a><a class="pdf-link" href="Science-Volume-1.pdf" download>Download</a></div></div></div>
+<div class="subject-pdf-card panel"><div class="subject-pdf-head"><div class="pdf-icon">📐</div><div><h3>Mathematics — Class 10</h3><p>Competency Focused Practice Questions</p></div></div>
+<div class="pdf-volume"><div><b>Volume 1</b><small>Maths PDF will be added here</small></div><div class="pdfbtns"><a class="pdf-link off">Coming soon</a></div></div></div>
+</div></section>
 <section id="planner" class="page">
 <div class="ai-hero">
   <div class="ai-orb">✦</div>
@@ -68,9 +65,9 @@
 <nav class="mobile-nav" aria-label="Mobile navigation">
   <button class="nav active" data-page="dashboard"><span class="mi">⌂</span><small>Home</small></button>
   <button class="nav" data-page="subjects"><span class="mi">◫</span><small>Syllabus</small></button>
-  <button class="nav" data-page="marks"><span class="mi">◈</span><small>Marks</small></button>
+  <button class="nav" data-page="tests"><span class="mi">🗓</span><small>Tests</small></button><button class="nav" data-page="marks"><span class="mi">◈</span><small>Marks</small></button>
   <button class="nav" data-page="planner"><span class="mi">✦</span><small>Planner</small></button>
-  <button class="nav" data-page="questions"><span class="mi">🧠</span><small>Questions</small></button>
+  <button class="nav" data-page="questions"><span class="mi">🧠</span><small>Papers</small></button>
 </nav>
 
 <div id="profileModal" class="modal-backdrop" aria-hidden="true">

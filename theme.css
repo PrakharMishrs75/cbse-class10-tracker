@@ -1,0 +1,41 @@
+/* CBSE Pro — new look (loads after style.css) */
+:root{--bg:#f3f2fb;--primary:#6d4cff;--purple:#a23cf0;--accent:#ff7a59;--teal:#10b5a5;--line:#e6e3f4;--shadow:0 12px 34px rgba(60,40,140,.09)}
+body{font-family:Inter,system-ui,sans-serif;background:radial-gradient(900px 400px at 85% -5%,#e4defc,transparent),var(--bg)}
+h1,h2,h3,.brand b,.kpis b{font-family:Sora,Inter,sans-serif;letter-spacing:-.02em}
+.side{background:linear-gradient(185deg,#15123b,#2a1a63);border:0;color:#fff}.side .brand b{color:#fff}.side small,.navlabel{color:#a9a3d6}
+.brandmark{background:linear-gradient(135deg,#ff7a59,#a23cf0);box-shadow:0 8px 20px rgba(162,60,240,.4)}
+.nav{color:#c9c4ee;border-radius:12px}.nav:hover{background:#ffffff14;color:#fff}.nav.active{background:linear-gradient(100deg,#6d4cff,#a23cf0);color:#fff;box-shadow:0 8px 18px rgba(109,76,255,.4)}.theme{color:#c9c4ee}
+.mobile-nav .nav{color:var(--muted)}.mobile-nav .nav.active{background:#efeaff;color:var(--primary);box-shadow:none}
+.avatar{background:linear-gradient(135deg,#6d4cff,#a23cf0);color:#fff;box-shadow:0 6px 16px rgba(109,76,255,.35)}
+.panel,.kpis>div,.rev,.question-card{border-radius:20px;border:1px solid var(--line)}
+.welcome{background:linear-gradient(120deg,#3b2bd9,#7a3cf0 60%,#c04cf0);border-radius:28px;position:relative;box-shadow:0 22px 50px rgba(91,60,220,.35)}
+.welcome:before{content:"";position:absolute;right:-60px;top:-80px;width:280px;height:280px;border-radius:50%;background:#ff7a5940;filter:blur(40px)}
+.welcome>*{position:relative}.welcome h2{font-size:32px}
+.big-progress{background:#4b32d6;border-radius:26px;padding:22px;border:1px solid #ffffff30}.circle:after{background:#4b32d6}.circle{background:conic-gradient(#ffb199 var(--p,0%),#ffffff26 0);width:150px;height:150px}
+.welcome button,.primary{border-radius:12px}.primary{background:linear-gradient(100deg,#6d4cff,#a23cf0);box-shadow:0 8px 18px rgba(109,76,255,.28)}.welcome .primary,.welcome button:not(.ghost){background:#fff;color:#4b32d6;box-shadow:none}
+.kpis{grid-template-columns:repeat(4,1fr)}.kpis>div:nth-child(1) .kico{background:#e2f8f4;color:var(--teal)}.kpis>div:nth-child(2) .kico{background:#fff0ea;color:var(--accent)}.kpis>div:nth-child(3) .kico{background:#fff6dc;color:#e0a100}.kpis>div:nth-child(4) .kico{background:#efeaff;color:var(--primary)}
+.kpis b{font-size:22px}
+.fill{background:linear-gradient(90deg,var(--c,#6d4cff),var(--c2,#a23cf0))}.bar{height:9px}
+.chartrow{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;margin:0 0 16px}.chartrow svg{width:100%;height:auto;display:block}.chartrow text{fill:var(--muted);font:600 11px Inter,sans-serif}.chartrow .pv{fill:var(--text);font-weight:800}.chartrow .trk{fill:#efedfa}.dark .chartrow .trk{fill:#232a40}.chartnote{color:var(--muted);font-size:12px;text-align:center;padding:50px 10px}
+.pagehead h2{font-size:25px}
+.subjectbox{overflow:hidden}.pill{background:#efeaff}
+.chapter{border-radius:12px}.chapter.done{background:#effaf6;border-color:#bfeadb}.dark .chapter.done{background:#14302b}
+.chapter input,.tp input{accent-color:var(--primary);width:16px;height:16px}
+/* tests */
+.tests-layout{display:grid;grid-template-columns:.95fr 1.05fr;gap:16px;align-items:start}.tests-layout .formgrid input{width:100%}
+.tp{border:1px solid var(--line);border-radius:14px;margin-bottom:9px;background:var(--card)}.tp summary{display:flex;justify-content:space-between;align-items:center;padding:13px 14px;cursor:pointer;list-style:none}.tp summary::-webkit-details-marker{display:none}.tp[open]{border-color:#cfc6ff}.tpall{display:flex;gap:8px;align-items:center;padding:0 14px 8px;font-weight:700;color:var(--primary);cursor:pointer}.tpchs{display:grid;gap:6px;padding:0 12px 12px}
+.tcard{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow);margin-bottom:14px;position:relative;overflow:hidden}.tcard:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:linear-gradient(var(--primary),var(--accent))}
+.thead{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}.thead small{color:var(--muted)}.tdays{background:linear-gradient(135deg,#ff7a59,#ff4f7b);color:#fff;border-radius:14px;padding:8px 12px;text-align:center;font-weight:800;min-width:64px}.tdays small{display:block;color:#ffe9e2;font-size:9px}.tdays.past{background:#c9c6dc}.tdays.soon{background:linear-gradient(135deg,#ff4f4f,#ff7a59)}
+.tchips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}.tchips span{font-size:10px;font-weight:700;background:#efeaff;color:var(--primary);padding:5px 9px;border-radius:20px}
+.tfoot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:8px}.tfoot button{border:1px solid var(--line);background:var(--bg);color:var(--text);padding:7px 11px;border-radius:9px;cursor:pointer;font-weight:700}.tfoot .del{color:#d04a4a}
+.day.test{background:#fff0ea;border-color:#ffc4b3}.tt{font-size:9px;font-weight:800;color:#d9532f;margin-top:4px;line-height:1.2}
+/* question bank */
+.pdf-volume{border-color:var(--line)}.pdf-link.off{background:#eee;color:#999;pointer-events:none}.pdfbtns{display:flex;gap:8px}
+.pdf-link{background:#efeaff;color:var(--primary);padding:9px 13px;border-radius:10px}
+/* auth */
+.auth-screen{background:linear-gradient(120deg,#15123b,#2a1a63 55%,#4b2a9e);gap:40px;flex-wrap:wrap;color:#fff}
+.auth-art{max-width:440px}.auth-art .auth-brand b{color:#fff}.auth-art .auth-brand small{color:#bdb6ee}.auth-art h1{font-size:38px;line-height:1.12;margin:0 0 16px}.auth-art p{color:#cfc9f5;line-height:1.6}.auth-points{list-style:none;padding:0;margin:22px 0 0;display:grid;gap:11px}.auth-points li{background:#ffffff12;border:1px solid #ffffff1f;border-radius:14px;padding:12px 14px;font-weight:600}
+.auth-card{color:var(--text);border-radius:26px}.auth-card h2{font-size:22px;margin:0 0 6px}.auth-card>p{margin:0 0 16px}
+.profile-modal{border-radius:24px}
+@media(max-width:900px){.chartrow,.tests-layout{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.auth-art h1{font-size:28px}}
+@media(max-width:620px){.mobile-nav .nav small{font-size:7.5px}.welcome h2{font-size:23px}.auth-art{display:none}}
