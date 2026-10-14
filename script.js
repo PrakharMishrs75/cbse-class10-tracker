@@ -4,12 +4,12 @@ window.startDashboard = async function(){
   const appShell=document.getElementById("appShell");
   const clerk=window.Clerk;
   if (!clerk) {
-    authScreen.innerHTML = '<div class="auth-card"><h1>Unable to load sign in</h1><p>Clerk could not be initialized. Please refresh the page.</p></div>';
+    document.getElementById("clerkAuth").innerHTML='<p class="formerr">Sign in could not load. Please reload the page.</p>';
     return;
   }
   if (!clerk.isSignedIn) {
-    appShell.style.display = "none";
-    const appUrl = new URL("/cbse-class10-tracker/", window.location.origin).toString();
+    appShell.classList.remove("ready");
+    const appUrl = window.location.origin + window.location.pathname;
     // GitHub Pages is hosted under /cbse-class10-tracker/.
     // Keep sign-in and sign-up as two real Clerk routes. Previously both
     // signUpUrl and signInUrl pointed to the same page, so clicking
@@ -50,7 +50,7 @@ window.startDashboard = async function(){
     return;
   }
   authScreen.style.display = "none";
-  appShell.style.display = "grid";
+  appShell.classList.add("ready");
 
 const syllabus={
 "Mathematics":["Real Numbers","Polynomials","Pair of Linear Equations","Quadratic Equations","Arithmetic Progressions","Triangles","Coordinate Geometry","Introduction to Trigonometry","Applications of Trigonometry","Circles","Areas Related to Circles","Surface Areas and Volumes","Statistics","Probability"],
@@ -60,9 +60,15 @@ const syllabus={
 "Hindi Course B":["साखी — कबीर","पद — मीरा","मनुष्यता — मैथिलीशरण गुप्त","पर्वत प्रदेश में पावस — सुमित्रानंदन पंत","तोप — वीरेन डंगवाल","कर चले हम फ़िदा — कैफ़ी आज़मी","आत्मत्राण — रवींद्रनाथ ठाकुर","बड़े भाई साहब — प्रेमचंद","डायरी का एक पन्ना — सीताराम सेकसरिया","तताँरा-वामीरो कथा — लीलाधर मंडलोई","तीसरी कसम के शिल्पकार शैलेंद्र — प्रहलाद अग्रवाल","अब कहाँ दूसरे के दुख से दुखी होने वाले — निदा फ़ाज़ली","पतझर में टूटी पत्तियाँ — रवींद्र केलेकर","कारतूस — हबीब तनवीर","हरिहर काका — मिथिलेश्वर","सपनों के-से दिन — गुरदयाल सिंह","टोपी शुक्ला — राही मासूम रज़ा"],
 "Information Technology":["Communication Skills-II","Self-Management Skills-II","ICT Skills-II","Entrepreneurial Skills-II","Green Skills-II","Digital Documentation (Advanced)","Electronic Spreadsheet (Advanced)","Database Management System","Healthy, Safe and Secure Working Environment"]
 };
-let s=JSON.parse(localStorage.getItem("cbsePro")||'{"done":{},"marks":[],"revision":{},"events":{}}');
+const UID=clerk.user?.id||"guest", SKEY="cbsePro:"+UID, PKEY="cbsePlanner:"+UID;
+// Data used to be shared by everyone on this browser; give it to the first account that signs in, then scope per user.
+if(!localStorage.getItem(SKEY)&&localStorage.getItem("cbsePro")&&!localStorage.getItem("cbseLegacyClaimed")){localStorage.setItem(SKEY,localStorage.getItem("cbsePro"));localStorage.setItem("cbseLegacyClaimed",UID);const lp=localStorage.getItem("cbseAIPlanner");if(lp)localStorage.setItem(PKEY,lp)}
+let s;try{s=JSON.parse(localStorage.getItem(SKEY)||"null")}catch(e){s=null}
+s=s&&typeof s==="object"?s:{};s.done=s.done||{};s.marks=s.marks||[];s.revision=s.revision||{};s.events=s.events||{};
+const expandedSubs=new Set([Object.keys(syllabus)[0]]);
 s.tests=s.tests||[];s.hist=s.hist||{};
 const SHORT={"Mathematics":"Maths","Social Science":"SST","Hindi Course B":"Hindi","Information Technology":"IT"},COLORS=["#0d59af","#10b5a5","#e23b2e","#e0a100","#e0489b","#3b8cf0","#8a5cf6"];
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
 function greet(){const h=new Date().getHours();return h<12?"Good morning":h<17?"Good afternoon":"Good evening"}
 let profile=(function(){
  const u=clerk.user;
@@ -73,7 +79,7 @@ const $=x=>document.querySelector(x), $$=x=>document.querySelectorAll(x);
 const key=(sub,i)=>sub+"::"+i;
 function total(){return Object.values(syllabus).reduce((n,a)=>n+a.length,0)}
 function done(){return Object.entries(syllabus).reduce((n,[sub,a])=>n+a.filter((_,i)=>s.done[key(sub,i)]).length,0)}
-function save(){s.hist[localDateString()]=Math.round(done()/total()*100);localStorage.setItem("cbsePro",JSON.stringify(s));render()}
+function save(){s.hist[localDateString()]=Math.round(done()/total()*100);localStorage.setItem(SKEY,JSON.stringify(s));render()}
 function pct(sub){return Math.round(syllabus[sub].filter((_,i)=>s.done[key(sub,i)]).length/syllabus[sub].length*100)}
 function initials(name){
  const parts=String(name||"Student").trim().split(/\s+/).filter(Boolean);
@@ -83,8 +89,8 @@ function updateProfileUI(){
  const name=profile?.name||"Student";
  const cls=profile?.class||"10";
  $("#profileBtn").textContent=initials(name);
- $("#title").textContent=`${greet()}, ${name} 👋`;
- $(".brand small").textContent=`Class ${cls} • 2026–27`;
+ $("#title").textContent=`${greet()}, ${name}`;
+ $("#classLabel").textContent=cls;$("#menuName").textContent=name;$("#menuEmail").textContent=clerk.user?.primaryEmailAddress?.emailAddress||"";
  $("#profileBtn").title=`${name} • Class ${cls}`;
 }
 function openProfile(force=false){
@@ -94,6 +100,7 @@ function openProfile(force=false){
  $("#studentClass").value=profile?.class||"10";
  $("#profileError").textContent="";
  modal.classList.add("show"); modal.setAttribute("aria-hidden","false");
+ $("#cancelProfile").hidden=!profile;
  setTimeout(()=>$("#studentName").focus(),50);
 }
 function closeProfile(){
@@ -106,12 +113,11 @@ async function saveProfile(){
  profile={name,class:$("#studentClass").value};
  $("#profileError").textContent="Saving…";
  try{
-   await clerk.user.update({firstName:name});
-   await clerk.user.updateMetadata({unsafeMetadata:{class:profile.class,name:profile.name}});
+   await clerk.user.update({firstName:name,unsafeMetadata:{...(clerk.user.unsafeMetadata||{}),class:profile.class,name}});
    profile={name:clerk.user.fullName||name,class:profile.class};
    updateProfileUI(); closeProfile();
  }catch(e){
-   $("#profileError").textContent="Could not save profile. Please try again.";
+   $("#profileError").textContent="Could not save your profile. Check your connection and try again.";
  }
 }
 
@@ -121,8 +127,9 @@ function localDateString(d=new Date()){
 }
 function setupPlanner(){
  const subj=$('#pSubject'); if(!subj) return;
+ subj.innerHTML='<option value="">Choose a subject</option>'+Object.keys(syllabus).map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
  let saved=null;
- try{ saved=JSON.parse(localStorage.getItem('cbseAIPlanner')||'null'); }catch(e){ localStorage.removeItem('cbseAIPlanner'); }
+ try{ saved=JSON.parse(localStorage.getItem(PKEY)||'null'); }catch(e){ localStorage.removeItem(PKEY); }
  if(saved){
    ['pDate','pTarget','pHours','pLevel','pSubject','pWeak'].forEach(id=>{if(saved[id]!==undefined && $('#'+id)) $('#'+id).value=saved[id]});
    if(saved.planHtml){ $('#planOutput').innerHTML=saved.planHtml; $('#planSummary').textContent=saved.summary||'Saved plan'; }
@@ -140,7 +147,7 @@ function setupPlanner(){
    chaptersBox.innerHTML=all.map((ch,i)=>{
      const checked=old.size?old.has(ch):false;
      const doneClass=s.done[key(subject,i)]?' is-done':'';
-     return `<label class="planner-chapter${doneClass}"><input type="checkbox" data-planner-chapter value="${esc(ch)}" ${checked?'checked':''}><span>${esc(ch)}</span>${s.done[key(subject,i)]?'<small>✓ Done</small>':''}</label>`;
+     return `<label class="planner-chapter${doneClass}"><input type="checkbox" data-planner-chapter value="${esc(ch)}" ${checked?'checked':''}><span>${esc(ch)}</span>${s.done[key(subject,i)]?'<small>Done</small>':''}</label>`;
    }).join('');
    syncChapterText();
  }
@@ -160,7 +167,7 @@ function setupPlanner(){
      $('#pLevel').value=info.avg<50?'weak':info.avg<75?'average':'strong';
    }
    if(!$('#pWeak').value.trim()&&info.avg!==null) $('#pWeak').value=info.avg<60?'Focus on concepts, formulas and basic questions':info.avg<80?'Focus on mistakes, competency questions and timed practice':'Focus on timed practice, case-based questions and final revision';
-   $('#plannerSyncNote').innerHTML=`✓ Synced with dashboard: <b>${info.completed}/${info.totalCh}</b> chapters complete${info.avg!==null?` • latest average <b>${info.avg}%</b>`:''}`;
+   $('#plannerSyncNote').innerHTML=`Synced with dashboard: <b>${info.completed}/${info.totalCh}</b> chapters complete${info.avg!==null?` • latest average <b>${info.avg}%</b>`:''}`;
  }
  function refreshStats(){
    const hours=Math.max(.5,Math.min(12,+$('#pHours').value||0)), date=$('#pDate').value;
@@ -174,7 +181,7 @@ function setupPlanner(){
  ['pDate','pHours','pTarget'].forEach(id=>$('#'+id)?.addEventListener('input',refreshStats));
  $('#syncPlanner').onclick=()=>{syncFromDashboard();refreshStats();};
  $('#generatePlan').onclick=generatePlan;
- $('#clearPlan').onclick=()=>{localStorage.removeItem('cbseAIPlanner'); $('#planOutput').innerHTML='<div class="empty-plan fancy-empty"><div class="empty-icon">🤖</div><b>Ready to build your plan?</b><p>Choose a subject, select chapters and generate your plan.</p></div>'; $('#planSummary').textContent='Your plan will appear here.'; $('#plannerSyncNote').textContent='Not synced yet'; refreshStats();};
+ $('#clearPlan').onclick=()=>{localStorage.removeItem(PKEY); $('#planOutput').innerHTML='<div class="empty-plan"><b>No plan yet</b><p>Choose a subject, select chapters and generate your plan.</p></div>'; $('#planSummary').textContent='Your plan will appear here.'; $('#plannerSyncNote').textContent='Not synced yet'; refreshStats();};
  if(subj.value){renderPlannerChapters(true);syncFromDashboard();} else renderPlannerChapters(false);
  refreshStats();
 }
@@ -215,11 +222,11 @@ function generatePlan(){
    plan.push({d,focus,learn,practice,revision,isLast,isPractice});
  }
  const syncLine=`Synced from syllabus: ${done()}/${total()} total chapters complete.${avg!==null?` ${subject} average: ${avg}%.`:''}`;
- const html=plan.map((x,i)=>`<article class="plan-day ${x.isLast?'exam-eve':''}"><div class="plan-day-head"><span class="plan-day-num">${i+1}</span><div><b>${formatDate(x.d)}</b><small>${x.isLast?'🔥 Final revision + mock test':x.isPractice?'🧠 Practice phase':'📖 Learning phase'}</small></div></div><div class="plan-focus"><b>Focus:</b> ${x.focus.map(esc).join(', ')}</div><div class="plan-blocks"><span>📖 Learn ${x.learn}h</span><span>🧠 Practice ${x.practice}h</span><span>🔁 Revise ${x.revision}h</span></div></article>`).join('');
+ const html=plan.map((x,i)=>`<article class="plan-day ${x.isLast?'exam-eve':''}"><div class="plan-day-head"><span class="plan-day-num">${i+1}</span><div><b>${formatDate(x.d)}</b><small>${x.isLast?'Final revision and mock test':x.isPractice?'Practice phase':'Learning phase'}</small></div></div><div class="plan-focus"><b>Focus:</b> ${x.focus.map(esc).join(', ')}</div><div class="plan-blocks"><span>Learn ${x.learn}h</span><span>Practice ${x.practice}h</span><span>Revise ${x.revision}h</span></div></article>`).join('');
  const summary=`${subject} • ${days} day${days===1?'':'s'} • ${hours}h/day • Target ${target}%`;
  $('#planSummary').textContent=summary; $('#planOutput').innerHTML=`<div class="plan-intro"><b>${summary}</b><p>${esc(syncLine)} ${weak?`Priority: ${esc(weak)}.`:'Planner prioritised the chapters you selected.'}</p></div>${html}`;
- $('#plannerSyncNote').innerHTML=`✓ Plan created for <b>${finalChapters.length}</b> chapter${finalChapters.length===1?'':'s'} across <b>${days}</b> day${days===1?'':'s'}.`;
- localStorage.setItem('cbseAIPlanner',JSON.stringify({pDate:testDate,pTarget:target,pHours:hours,pLevel:level,pSubject:subject,pChapters:finalChapters.join(', '),pWeak:weak,planHtml:$('#planOutput').innerHTML,summary}));
+ $('#plannerSyncNote').innerHTML=`Plan created for <b>${finalChapters.length}</b> chapter${finalChapters.length===1?'':'s'} across <b>${days}</b> day${days===1?'':'s'}.`;
+ localStorage.setItem(PKEY,JSON.stringify({pDate:testDate,pTarget:target,pHours:hours,pLevel:level,pSubject:subject,pChapters:finalChapters.join(', '),pWeak:weak,planHtml:$('#planOutput').innerHTML,summary}));
 }
 
 function render(){
@@ -228,14 +235,15 @@ function render(){
  $(".big-progress").title=`${d} of ${t} chapters complete`;
  $("#subjectProgress").innerHTML=Object.keys(syllabus).map(x=>`<button type="button" class="progressitem subject-jump" data-subject-jump="${esc(x)}" title="Open all ${syllabus[x].length} chapters of ${esc(x)}"><div class="row"><span>${esc(x)}</span><b>${pct(x)}%</b></div><div class="bar"><div class="fill" style="width:${pct(x)}%;--c:${COLORS[Object.keys(syllabus).indexOf(x)%7]};--c2:${COLORS[(Object.keys(syllabus).indexOf(x)+1)%7]}"></div></div><small>${syllabus[x].length} chapters • Click to view all</small></button>`).join("");
  $$("[data-subject-jump]").forEach(el=>el.onclick=()=>openSubject(el.dataset.subjectJump));
- $("#marksMini").innerHTML=marks.length?marks.slice(-5).reverse().map(m=>`<div class="minirow"><span>${m.subject}</span><span>${m.test}</span><b class="score">${Math.round(m.score/m.total*100)}%</b></div>`).join(""):"<p style='color:var(--muted)'>No marks yet. Add your first test.</p>";
+ $("#marksMini").innerHTML=marks.length?marks.slice(-5).reverse().map(m=>`<div class="minirow"><span>${esc(m.subject)}</span><span>${esc(m.test)}</span><b class="score">${Math.round(m.score/m.total*100)}%</b></div>`).join(""):"<p style='color:var(--muted)'>No marks yet. Add your first test.</p>";
  renderSyllabus();renderMarks();renderRevision();renderCalendar();renderCharts();renderTests();
 }
 function openSubject(subject){
  if(!syllabus[subject]) return;
  page("subjects");
  if($("#search")) $("#search").value="";
- renderSyllabus(subject);
+ expandedSubs.add(subject);
+ renderSyllabus();
  const card=document.querySelector(`[data-subject-card="${CSS.escape(subject)}"]`);
  if(card){
    card.scrollIntoView({behavior:"smooth",block:"start"});
@@ -244,13 +252,13 @@ function openSubject(subject){
  }
 }
 
-function renderSyllabus(openSubjectName=""){
+function renderSyllabus(){
  let q=($("#search")?.value||"").toLowerCase();
  $("#syllabus").innerHTML=Object.entries(syllabus).map(([sub,a])=>{
    let items=a.map((c,i)=>({c,i})).filter(x=>x.c.toLowerCase().includes(q));
    if(!items.length)return "";
    let d=pct(sub);
-   const isOpen=!openSubjectName || openSubjectName===sub;
+   const isOpen=!!q||expandedSubs.has(sub);
    return `<div class="panel subjectbox ${isOpen?'expanded':''}" data-subject-card="${esc(sub)}">
      <button type="button" class="subjecttop subject-toggle" data-subject-toggle="${esc(sub)}" aria-expanded="${isOpen}">
        <span><h3>${esc(sub)}</h3><small>${a.length} chapters • ${a.filter((_,i)=>s.done[key(sub,i)]).length} completed</small></span>
@@ -263,6 +271,7 @@ function renderSyllabus(openSubjectName=""){
  $$("[data-subject-toggle]").forEach(btn=>btn.onclick=()=>{
    const card=btn.closest(".subjectbox"), chapters=card.querySelector(".chapters");
    const open=btn.getAttribute("aria-expanded")==="true";
+   if(open)expandedSubs.delete(btn.dataset.subjectToggle);else expandedSubs.add(btn.dataset.subjectToggle);
    btn.setAttribute("aria-expanded",String(!open));
    card.classList.toggle("expanded",!open);
    chapters.hidden=open;
@@ -279,7 +288,7 @@ function renderCharts(){
  const subs=Object.keys(syllabus),n=subs.length,W=560,bw=46,gap=(W-40-n*bw)/(n-1);
  $("#chartBars").innerHTML=`<svg viewBox="0 0 ${W} 235" role="img" aria-label="Completion by subject"><defs>${subs.map((x,i)=>`<linearGradient id="g${i}" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${COLORS[i%7]}"/><stop offset="1" stop-color="${COLORS[(i+1)%7]}"/></linearGradient>`).join("")}</defs>`+subs.map((x,i)=>{const p=pct(x),h=Math.max(p*1.6,p?4:0),xx=20+i*(bw+gap);return `<rect class="trk" x="${xx}" y="30" width="${bw}" height="160" rx="12"/><rect x="${xx}" y="${190-h}" width="${bw}" height="${h}" rx="12" fill="url(#g${i})"/><text class="pv" x="${xx+bw/2}" y="${Math.min(186-h,178)-4}" text-anchor="middle">${p}%</text><text x="${xx+bw/2}" y="212" text-anchor="middle">${esc(SHORT[x]||x)}</text><text x="${xx+bw/2}" y="227" text-anchor="middle" style="font-size:9px">${syllabus[x].filter((_,j)=>s.done[key(x,j)]).length}/${syllabus[x].length}</text>`}).join("")+"</svg>";
  const ks=Object.keys(s.hist).sort().slice(-14);
- if(ks.length<2){$("#chartTrend").innerHTML='<div class="chartnote">📈 Tick off chapters on two different days to see your trend line.</div>';return}
+ if(ks.length<2){$("#chartTrend").innerHTML='<div class="chartnote">Tick off chapters on two different days to see your trend line.</div>';return}
  const pts=ks.map((k,i)=>[20+i*(320/(ks.length-1)),170-s.hist[k]*1.4]),line=pts.map(p=>p.join(",")).join(" ");
  $("#chartTrend").innerHTML=`<svg viewBox="0 0 360 215"><defs><linearGradient id="ta" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d59af" stop-opacity=".35"/><stop offset="1" stop-color="#0d59af" stop-opacity="0"/></linearGradient></defs>${[0,50,100].map(v=>`<line x1="20" x2="340" y1="${170-v*1.4}" y2="${170-v*1.4}" stroke="#8883" stroke-dasharray="3 4"/><text x="0" y="${174-v*1.4}" style="font-size:9px">${v}</text>`).join("")}<polygon points="20,170 ${line} 340,170" fill="url(#ta)"/><polyline points="${line}" fill="none" stroke="#0d59af" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="#fff" stroke="#0d59af" stroke-width="2.5"/>`).join("")}<text x="20" y="195">${ks[0].slice(5)}</text><text x="340" y="195" text-anchor="end">${ks[ks.length-1].slice(5)}</text></svg>`;
 }
@@ -293,7 +302,7 @@ function renderTests(){
   return `<div class="tcard"><div class="thead"><div><h3>${esc(t.name)}</h3><small>${new Date(t.date+"T00:00:00").toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</small></div><div class="tdays ${past?"past":dl<=3?"soon":""}">${past?"Done":dl===0?"Today":dl}<small>${past||dl===0?"":"days left"}</small></div></div>
   <div class="tchips">${st.parts.map(x=>`<span>${esc(SHORT[x.sub]||x.sub)} • ${x.n} ch</span>`).join("")}</div>
   <div class="row" style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:7px"><span>Syllabus ready</span><b>${st.p}% (${st.dn}/${st.tot})</b></div><div class="bar"><div class="fill" style="width:${st.p}%"></div></div>
-  <div class="tfoot"><small style="color:var(--muted)">${st.tot-st.dn} chapter${st.tot-st.dn===1?"":"s"} still to finish</small><span><button data-tplan="${t.id}">Plan ✦</button> <button class="del" data-tdel="${t.id}">Delete</button></span></div></div>`}).join(""):'<div class="panel"><b>No tests yet.</b><p style="color:var(--muted)">Choose a date and syllabus on the left to schedule your first test.</p></div>';
+  <div class="tfoot"><small style="color:var(--muted)">${st.tot-st.dn} chapter${st.tot-st.dn===1?"":"s"} still to finish</small><span><button data-tplan="${t.id}">Plan this test</button> <button class="del" data-tdel="${t.id}">Delete</button></span></div></div>`}).join(""):'<div class="panel"><b>No tests yet.</b><p style="color:var(--muted)">Choose a date and syllabus on the left to schedule your first test.</p></div>';
  $$("[data-tdel]").forEach(b=>b.onclick=()=>{s.tests=s.tests.filter(t=>t.id!==b.dataset.tdel);save()});
  $$("[data-tplan]").forEach(b=>b.onclick=()=>{const t=s.tests.find(x=>x.id===b.dataset.tplan),sub=Object.keys(t.sel)[0];page("planner");$("#pDate").value=t.date;$("#pSubject").value=sub;$("#pSubject").dispatchEvent(new Event("change"));$("#pDate").value=t.date;$("#pDate").dispatchEvent(new Event("input"))});
 }
@@ -311,12 +320,12 @@ function setupTests(){
 }
 function renderMarks(){
  const box=$("#marksTable");if(!s.marks.length){box.innerHTML="<p style='color:var(--muted)'>No results recorded.</p>";return}
- box.innerHTML=`<div class="tablehead"><span>Subject</span><span>Test</span><span>Score</span><span></span></div>`+s.marks.map((m,i)=>`<div class="markrow"><span>${m.subject}</span><span>${m.test}</span><b>${m.score}/${m.total}</b><button class="del" data-del="${i}">×</button></div>`).join("");
+ box.innerHTML=`<div class="tablehead"><span>Subject</span><span>Test</span><span>Score</span><span></span></div>`+s.marks.map((m,i)=>`<div class="markrow"><span>${esc(m.subject)}</span><span>${esc(m.test)}</span><b>${m.score}/${m.total}</b><button class="del" data-del="${i}" aria-label="Delete result">×</button></div>`).join("");
 $$("[data-del]").forEach(b=>b.onclick=()=>{s.marks.splice(+b.dataset.del,1);save()})
 }
 function renderRevision(){
  let items=[];Object.entries(s.revision).forEach(([k,v])=>{let [sub,i]=k.split("::");if(s.done[k])items.push({k,sub,name:syllabus[sub][i],...v})});
- $("#revisionList").innerHTML=items.length?items.map(x=>`<div class="rev"><div class="revtop"><b>${x.name}</b><span class="pill">${x.level||"Due today"}</span></div><small>${x.sub} • Last completed ${x.date}</small><button data-rev="${x.k}">Mark revised ✓</button></div>`).join(""):"<div class='panel'><b>No revision items yet.</b><p style='color:var(--muted)'>Complete a chapter and it will appear here.</p></div>";
+ $("#revisionList").innerHTML=items.length?items.map(x=>`<div class="rev"><div class="revtop"><b>${esc(x.name)}</b><span class="pill">${esc(x.level||"Due today")}</span></div><small>${esc(x.sub)} • Last completed ${esc(x.date)}</small><button data-rev="${x.k}">Mark revised ✓</button></div>`).join(""):"<div class='panel'><b>No revision items yet.</b><p style='color:var(--muted)'>Complete a chapter and it will appear here.</p></div>";
 $$("[data-rev]").forEach(b=>b.onclick=()=>{s.revision[b.dataset.rev]={date:new Date().toLocaleDateString(),level:"Revised"};save()})
 }
 let cur=new Date();
@@ -324,84 +333,42 @@ function renderCalendar(){
  $("#month").textContent=cur.toLocaleString("en-IN",{month:"long",year:"numeric"});
  let y=cur.getFullYear(),m=cur.getMonth(),first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate(),out="";
  for(let i=0;i<first;i++)out+="<div class='day muted'></div>";
- for(let d=1;d<=days;d++){let date=new Date(y,m,d),id=localDateString(date),today=localDateString(),T=s.tests.filter(t=>t.date===id);out+=`<div class="day ${id===today?'today':''} ${s.events[id]?'has':''} ${T.length?'test':''}" data-date="${id}"><b>${d}</b>${s.events[id]?"<div class='dot'></div>":""}${T.map(t=>`<div class='tt'>🗓 ${esc(t.name)}</div>`).join("")}</div>`}
- $("#days").innerHTML=out;$$("[data-date]").forEach(el=>el.onclick=()=>{let id=el.dataset.date;let task=prompt("Study task for "+id+":",s.events[id]||"");if(task===null)return;if(task.trim())s.events[id]=task;else delete s.events[id];save()})
+ for(let d=1;d<=days;d++){let date=new Date(y,m,d),id=localDateString(date),today=localDateString(),T=s.tests.filter(t=>t.date===id);out+=`<div class="day ${id===today?'today':''} ${s.events[id]?'has':''} ${T.length?'test':''}" data-date="${id}"><b>${d}</b>${s.events[id]?`<div class='dot'></div><div class='dtask'>${esc(s.events[id])}</div>`:""}${T.map(t=>`<div class='tt'>${esc(t.name)}</div>`).join("")}</div>`}
+ $("#days").innerHTML=out;$$("[data-date]").forEach(el=>el.onclick=()=>openTask(el.dataset.date))
 }
-function page(name){$$(".page").forEach(p=>p.classList.remove("active"));$("#"+name).classList.add("active");$$(".nav").forEach(n=>n.classList.toggle("active",n.dataset.page===name));$("#crumb").textContent=name.toUpperCase();$("#title").textContent=name==="dashboard"?`${greet()}, ${profile?.name||"scholar"} 👋`:name==="subjects"?"Your syllabus":name==="tests"?"Test planner":name==="marks"?"Marks tracker":name==="revision"?"Revision center":name==="questions"?"Competency Question Bank":name==="planner"?"AI Study Planner":"Study calendar"}
-$$("[data-page]").forEach(b=>b.onclick=()=>page(b.dataset.page));$("#search").oninput=renderSyllabus;
-$("#addMark").onclick=()=>{let subject=$("#mSubject").value.trim(),test=$("#mTest").value.trim(),score=+$("#mScore").value,total=+$("#mTotal").value;if(!subject||!test||!total||score<0||score>total){alert("Please enter valid subject, test, score and total marks.");return}s.marks.push({subject,test,score,total});["mSubject","mTest","mScore","mTotal"].forEach(id=>$("#"+id).value="");save()};
+let taskDate=null;
+function openTask(id){taskDate=id;$("#taskDateLbl").textContent=new Date(id+"T00:00:00").toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long",year:"numeric"});$("#taskText").value=s.events[id]||"";$("#taskDelete").hidden=!s.events[id];const m=$("#taskModal");m.classList.add("show");m.setAttribute("aria-hidden","false");setTimeout(()=>$("#taskText").focus(),50)}
+function closeTask(){const m=$("#taskModal");m.classList.remove("show");m.setAttribute("aria-hidden","true");taskDate=null}
+$("#taskSave").onclick=()=>{const v=$("#taskText").value.trim();if(taskDate){if(v)s.events[taskDate]=v;else delete s.events[taskDate]}closeTask();save()};
+$("#taskDelete").onclick=()=>{if(taskDate)delete s.events[taskDate];closeTask();save()};
+$("#taskCancel").onclick=closeTask;
+$("#taskText").addEventListener("keydown",e=>{if(e.key==="Enter")$("#taskSave").click()});
+function _noop(){
+}
+const TITLES={dashboard:"Dashboard",subjects:"Syllabus",tests:"Tests",marks:"Marks",revision:"Revision",questions:"Question bank",planner:"Study planner",calendar:"Calendar"};
+function page(name){if(!$("#"+name))return;$$(".page").forEach(p=>p.classList.remove("active"));$("#"+name).classList.add("active");$$(".nav").forEach(n=>n.classList.toggle("active",n.dataset.page===name));$("#crumb").textContent=TITLES[name]||name;$("#title").textContent=name==="dashboard"?`${greet()}, ${profile?.name||"student"}`:({subjects:"Your syllabus",tests:"Test planner",marks:"Marks tracker",revision:"Revision centre",questions:"Competency question bank",planner:"Study planner",calendar:"Study calendar"}[name]||name);window.scrollTo({top:0})}
+$$("[data-page]").forEach(b=>b.onclick=()=>page(b.dataset.page));$("#search").oninput=()=>renderSyllabus();
+$("#mSubject").innerHTML=Object.keys(syllabus).map(x=>`<option>${esc(x)}</option>`).join("");
+$("#addMark").onclick=()=>{const subject=$("#mSubject").value,test=$("#mTest").value.trim(),score=parseFloat($("#mScore").value),total=parseFloat($("#mTotal").value),err=m=>$("#mErr").textContent=m;
+ if(!test)return err("Enter the test name.");if(!(total>0))return err("Total marks must be greater than 0.");if(!(score>=0)||score>total)return err("Marks scored must be between 0 and the total.");
+ err("");s.marks.push({subject,test,score,total});$("#mTest").value="";$("#mScore").value="";$("#mTotal").value="";save()};
 $("#prev").onclick=()=>{cur.setMonth(cur.getMonth()-1);renderCalendar()};$("#next").onclick=()=>{cur.setMonth(cur.getMonth()+1);renderCalendar()};
 $("#theme").onclick=()=>{document.body.classList.toggle("dark");localStorage.setItem("cbseDark",document.body.classList.contains("dark"))};if(localStorage.getItem("cbseDark")==="true")document.body.classList.add("dark");
 updateProfileUI();
 setupPlanner();
 setupTests();
 $("#saveProfile").onclick=saveProfile;
-$("#profileBtn").onclick=()=>openProfile();
+$("#profileBtn").onclick=()=>setMenu(menu.hidden);
 $("#profileModal").addEventListener("click",e=>{if(e.target.id==="profileModal" && profile)closeProfile()});
-$("#signOutBtn").onclick=async()=>{await clerk.signOut();location.reload()};
+async function doSignOut(){try{await clerk.signOut()}catch(e){console.error(e)}location.reload()}
+$("#signOutBtn").onclick=doSignOut;$("#menuSignOut").onclick=doSignOut;
+const menu=$("#userMenu");
+function setMenu(open){menu.hidden=!open;$("#profileBtn").setAttribute("aria-expanded",String(open))}
+$("#editProfileBtn").onclick=()=>{setMenu(false);openProfile()};
+$("#cancelProfile").onclick=()=>{if(profile)closeProfile()};
+document.addEventListener("click",e=>{if(!e.target.closest(".usermenu"))setMenu(false)});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){setMenu(false);if(profile)closeProfile();closeTask()}});
 if(!profile)openProfile(true);
 render();
-// Competency-based question bank + optional GitHub JSON sync
-let questionBank = Array.isArray(window.CBSE_QUESTION_BANK) ? window.CBSE_QUESTION_BANK : [];
-let filteredQuestions = [];
-
-function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
-function setupQuestionBank(){
-  const subject=$("#qSubject"), chapter=$("#qChapter"), type=$("#qType"), marks=$("#qMarks");
-  if(!subject) return;
-  [...new Set(questionBank.map(q=>q.subject))].sort().forEach(x=>subject.insertAdjacentHTML("beforeend",`<option>${esc(x)}</option>`));
-  $("#githubUrl").value=localStorage.getItem("cbseGithubUrl")||"";
-  subject.onchange=()=>{updateChapterOptions();renderQuestions()};
-  chapter.onchange=()=>renderQuestions(); type.onchange=()=>renderQuestions(); marks.onchange=()=>renderQuestions();
-  $("#showAllQ").onclick=()=>renderQuestions(true);
-  $("#randomQ").onclick=()=>{let pool=getFiltered();if(!pool.length)return;renderQuestionCards([pool[Math.floor(Math.random()*pool.length)]])};
-  $("#syncGithub").onclick=syncGithub;
-  updateChapterOptions(); renderQuestions(true);
-}
-function updateChapterOptions(){
-  const subject=$("#qSubject"), chapter=$("#qChapter"); if(!chapter)return;
-  const current=chapter.value;
-  const qs=questionBank.filter(q=>!subject.value||q.subject===subject.value);
-  chapter.innerHTML='<option value="">All chapters</option>'+[...new Set(qs.map(q=>q.chapter))].sort().map(x=>`<option>${esc(x)}</option>`).join("");
-  if([...chapter.options].some(o=>o.value===current)) chapter.value=current;
-}
-function getFiltered(){
-  const subject=$("#qSubject").value, chapter=$("#qChapter").value, type=$("#qType").value, marks=$("#qMarks").value;
-  return questionBank.filter(q=>(!subject||q.subject===subject)&&(!chapter||q.chapter===chapter)&&(!type||q.type===type)&&(!marks||String(q.marks)===marks));
-}
-function renderQuestionCards(showAll=false){
-  filteredQuestions=getFiltered();
-  const list=showAll?filteredQuestions:filteredQuestions.slice(0,10);
-  $("#qCount").textContent=`${filteredQuestions.length} questions`;
-  $("#questionList").innerHTML=list.length?list.map((q,i)=>`<article class="question-card">
-    <div class="qmeta"><span>${esc(q.subject)}</span><span>${esc(q.chapter)}</span><span>${esc(q.type)}</span><span>${q.marks} mark${q.marks==1?"":"s"}</span></div>
-    <p class="qtext">${i+1}. ${esc(q.question)}</p>
-    <ol class="qopts" type="A">${q.options.map(o=>`<li>${esc(o)}</li>`).join("")}</ol>
-    <div class="q-card-actions"><button data-answer="${i}">Show answer</button></div>
-    <div class="q-answer" data-answer-box="${i}"><b>Answer:</b> ${esc(q.answer)}<br><small>${esc(q.explanation)}</small></div>
-  </article>`).join(""):"<div class='panel'><b>No questions match these filters.</b><p style='color:var(--muted)'>Try another subject, chapter or question type.</p></div>";
-  $$("#questionList [data-answer]").forEach(b=>b.onclick=()=>{const box=$(`#questionList [data-answer-box="${b.dataset.answer}"]`);box.classList.toggle("show");b.textContent=box.classList.contains("show")?"Hide answer":"Show answer"});
-}
-function renderQuestions(showAll=false){renderQuestionCards(showAll)}
-async function syncGithub(){
-  const input=$("#githubUrl"), status=$("#githubStatus"), url=input.value.trim();
-  if(!url){status.textContent="Paste a raw GitHub URL first.";return}
-  status.textContent="Syncing…";
-  try{
-    const res=await fetch(url,{cache:"no-store"});
-    if(!res.ok)throw new Error(`HTTP ${res.status}`);
-    const data=await res.json();
-    if(!Array.isArray(data))throw new Error("JSON must be an array of questions.");
-    const valid=data.filter(q=>q.subject&&q.chapter&&q.question&&Array.isArray(q.options)&&q.answer);
-    if(!valid.length)throw new Error("No valid questions found.");
-    questionBank=valid;
-    localStorage.setItem("cbseGithubUrl",url);
-    $("#qSubject").innerHTML='<option value="">All subjects</option>';
-    [...new Set(questionBank.map(q=>q.subject))].sort().forEach(x=>$("#qSubject").insertAdjacentHTML("beforeend",`<option>${esc(x)}</option>`));
-    updateChapterOptions(); renderQuestions(true);
-    status.textContent=`Synced ${valid.length} questions from GitHub.`;
-  }catch(e){status.textContent=`Sync failed: ${e.message}. Check that the URL is a public raw JSON file.`}
-}
-setupQuestionBank();
 
 };
